@@ -41,11 +41,11 @@ class Window {
     return false;
   }
 
-  commitMount(instance, type, props) {
+  commitMount(props) {
     // noop
   }
 
-  commitUpdate() {
+  commitUpdate(oldProps, newProps) {
     // noop
   }
 }

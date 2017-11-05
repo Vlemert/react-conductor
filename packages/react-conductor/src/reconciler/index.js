@@ -82,11 +82,11 @@ const ElectronRenderer = Reconciler({
     },
 
     commitUpdate(instance, updatePayload, type, oldProps, newProps) {
-      // noop
+      instance.commitUpdate(oldProps, newProps);
     },
 
-    commitMount(instance, type, props) {
-      instance.commitMount(instance, type, props);
+    commitMount(props) {
+      instance.commitMount(props);
     },
 
     commitTextUpdate(textInstance, oldText, newText) {

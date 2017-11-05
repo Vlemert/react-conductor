@@ -57,12 +57,26 @@ class App {
     return false;
   }
 
-  commitMount(instance, type, props) {
-    // noop
+  // This is mainly here to test whether I could get this to work
+  // Might want to move all the app.dock stuff to a different element
+  handleDockBounce = dockBounce => {
+    if (dockBounce) {
+      this.dockBounceId = this.root.electronApp.dock.bounce(
+        dockBounce === true ? undefined : dockBounce
+      );
+    } else {
+      this.root.electronApp.dock.cancelBounce(this.dockBounceId);
+    }
+  };
+
+  commitMount(props) {
+    this.handleDockBounce(props.dockBounce);
   }
 
-  commitUpdate() {
-    // noop
+  commitUpdate(oldProps, newProps) {
+    if (oldProps.dockBounce !== newProps.dockBounce) {
+      this.handleDockBounce(newProps.dockBounce);
+    }
   }
 }
 
