@@ -1,0 +1,17 @@
+{
+  "name": "@react-conductor/docx",
+  "version": "0.1.0",
+  "description": "DocX renderer based on https://github.com/nitin42/Making-a-custom-React-renderer",
+  "main": "index.js",
+  "author": "Niels Vleeming",
+  "license": "MIT",
+  "dependencies": {
+    "fbjs": "0.8.16",
+    "officegen": "^0.4.5",
+    "react": "^16.0.0",
+    "react-reconciler": "0.2.0"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
