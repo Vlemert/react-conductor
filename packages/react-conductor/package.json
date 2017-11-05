@@ -1,0 +1,20 @@
+{
+  "entry": "src/index.js",
+  "name": "@react-conductor/core",
+  "version": "0.1.0",
+  "description": "React renderer for Electron",
+  "main": "src/index.js",
+  "author": "Niels Vleeming",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^1.7.9",
+    "fbjs": "0.8.16",
+    "react-reconciler": "0.2.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "react": "^16.0.0"
+  }
+}

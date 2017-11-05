@@ -1,29 +1,27 @@
 import emptyObject from 'fbjs/lib/emptyObject';
-import createElement from '../utils/createElement';
+import createElement from '../utils/create-element';
 
 const Reconciler = require('react-reconciler');
 
-const WordRenderer = Reconciler({
+const ElectronRenderer = Reconciler({
   // Add children
   appendInitialChild(parentInstance, child) {
-    if (parentInstance.appendChild) {
-      parentInstance.appendChild(child);
-    } else {
-      parentInstance.document = child;
-    }
+    parentInstance.appendChild(child);
   },
 
-  // Here we are passing the internal instance (root instance i.e WordDocument)
+  // Here we are passing the internal instance (root instance i.e App)
   createInstance(type, props, internalInstanceHandle) {
     return createElement(type, props, internalInstanceHandle);
   },
 
   createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
-    return text;
+    throw new Error(
+      'TextElements are not supported! (do you have some text in your JSX?)'
+    );
   },
 
   finalizeInitialChildren(wordElement, type, props) {
-    return false;
+    return wordElement.finalizeInitialChildren(type, props);
   },
 
   getPublicInstance(inst) {
@@ -64,19 +62,11 @@ const WordRenderer = Reconciler({
 
   mutation: {
     appendChild(parentInstance, child) {
-      if (parentInstance.appendChild) {
-        parentInstance.appendChild(child);
-      } else {
-        parentInstance.document = child;
-      }
+      parentInstance.appendChild(child);
     },
 
     appendChildToContainer(parentInstance, child) {
-      if (parentInstance.appendChild) {
-        parentInstance.appendChild(child);
-      } else {
-        parentInstance.document = child;
-      }
+      parentInstance.appendChild(child);
     },
 
     removeChild(parentInstance, child) {
@@ -95,14 +85,16 @@ const WordRenderer = Reconciler({
       // noop
     },
 
-    commitMount(instance, updatePayload, type, oldProps, newProps) {
-      // noop
+    commitMount(instance, type, props) {
+      instance.commitMount(instance, type, props);
     },
 
     commitTextUpdate(textInstance, oldText, newText) {
-      textInstance.children = newText;
+      throw new Error(
+        'TextElements are not supported! (do you have some text in your JSX?)'
+      );
     }
   }
 });
 
-export default WordRenderer;
+export default ElectronRenderer;

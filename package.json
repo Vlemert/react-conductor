@@ -6,7 +6,8 @@
   "author": "Niels Vleeming",
   "license": "MIT",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -16,5 +17,6 @@
     "babel-preset-stage-0": "^6.24.1",
     "jest": "^21.2.1",
     "prettier": "^1.7.4"
-  }
+  },
+  "dependencies": {}
 }
