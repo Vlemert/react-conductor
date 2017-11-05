@@ -20,8 +20,8 @@ const ElectronRenderer = Reconciler({
     );
   },
 
-  finalizeInitialChildren(wordElement, type, props) {
-    return wordElement.finalizeInitialChildren(type, props);
+  finalizeInitialChildren(instance, type, props) {
+    return instance.finalizeInitialChildren(props);
   },
 
   getPublicInstance(inst) {

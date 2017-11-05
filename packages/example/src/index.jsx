@@ -1,11 +1,13 @@
 import React from 'react';
-import { render, Window } from '../../react-conductor/src/index';
+import { render, App, Window } from '../../react-conductor/src/index';
 
-const App = () => (
-  <Window show>
-    <Window show />
-    <Window show />
-  </Window>
+const Application = () => (
+  <App onBrowserWindowBlur={() => console.log('blurrrrr')}>
+    <Window show>
+      <Window show />
+      <Window show />
+    </Window>
+  </App>
 );
 
-render(<App />);
+render(<Application />);

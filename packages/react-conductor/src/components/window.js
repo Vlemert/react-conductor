@@ -37,7 +37,7 @@ class Window {
     this.renderChildNode();
   }
 
-  finalizeInitialChildren(type, props) {
+  finalizeInitialChildren(props) {
     return false;
   }
 
@@ -45,7 +45,9 @@ class Window {
     // noop
   }
 
-  commitUpdate() {}
+  commitUpdate() {
+    // noop
+  }
 }
 
 export default Window;

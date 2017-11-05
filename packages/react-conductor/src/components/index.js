@@ -1,4 +1,5 @@
+import Root from './root';
 import App from './app';
 import Window from './window';
 
-export { App, Window };
+export { Root, App, Window };

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { app, BrowserWindow } from 'electron';
 
-import { Window, render } from '../index';
+import { App, Window, render } from '../index';
 import testRender from '../test-renderer';
 
 jest.mock('electron');
@@ -12,32 +12,74 @@ describe('renderer', () => {
   });
 
   test('renders a root', () => {
-    const App = () => null;
+    const Application = () => null;
 
-    const wrapper = testRender(<App />);
+    const wrapper = testRender(<Application />);
 
     expect(wrapper.electronApp).toBe(app);
   });
 
+  test('throws if the root element is not an App', () => {
+    // Hide react error details from the console
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+
+    const Application = () => <Window />;
+
+    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
+
+    // And restore console.error behaviour
+    console.error = originalConsoleError;
+  });
+
+  test('renders an app', () => {
+    const Application = () => <App />;
+
+    const wrapper = testRender(<Application />);
+
+    // Not sure what to assert here..
+    expect(wrapper.appElement.root.electronApp).toBe(app);
+  });
+
+  test('registers app events', () => {
+    app.on = jest.fn();
+    const Application = () => <App onBrowserWindowBlur={blurHandler} />;
+
+    const blurHandler = () => {};
+    testRender(<Application />);
+
+    expect(app.on).toBeCalledWith('browser-window-blur', blurHandler);
+    delete app.on;
+  });
+
   test('renders a window', () => {
-    const App = () => <Window />;
+    const Application = () => (
+      <App>
+        <Window />
+      </App>
+    );
 
-    const wrapper = testRender(<App />);
+    const wrapper = testRender(<Application />);
 
-    expect(wrapper.childWindows.size).toBe(1);
-    const childIterator = wrapper.childWindows.values();
+    expect(wrapper.appElement.childWindows.size).toBe(1);
+    const childIterator = wrapper.appElement.childWindows.values();
     expect(childIterator.next().value.browserWindow).toBeInstanceOf(
       BrowserWindow
     );
   });
 
   test('renders multiple windows', () => {
-    const App = () => [<Window key="1" />, <Window key="2" />];
+    const Application = () => (
+      <App>
+        <Window key="1" />
+        <Window key="2" />
+      </App>
+    );
 
-    const wrapper = testRender(<App />);
+    const wrapper = testRender(<Application />);
 
-    expect(wrapper.childWindows.size).toBe(2);
-    const childIterator = wrapper.childWindows.values();
+    expect(wrapper.appElement.childWindows.size).toBe(2);
+    const childIterator = wrapper.appElement.childWindows.values();
     expect(childIterator.next().value.browserWindow).toBeInstanceOf(
       BrowserWindow
     );
@@ -47,16 +89,18 @@ describe('renderer', () => {
   });
 
   test('renders windows in windows', () => {
-    const App = () => (
-      <Window>
-        <Window />
-      </Window>
+    const Application = () => (
+      <App>
+        <Window>
+          <Window />
+        </Window>
+      </App>
     );
 
-    const wrapper = testRender(<App />);
+    const wrapper = testRender(<Application />);
 
-    expect(wrapper.childWindows.size).toBe(1);
-    const appChildIterator = wrapper.childWindows.values();
+    expect(wrapper.appElement.childWindows.size).toBe(1);
+    const appChildIterator = wrapper.appElement.childWindows.values();
     const appChild = appChildIterator.next().value;
     expect(appChild.browserWindow).toBeInstanceOf(BrowserWindow);
 
@@ -67,23 +111,31 @@ describe('renderer', () => {
   });
 
   test('window is hidden by default', () => {
-    const App = () => <Window />;
+    const Application = () => (
+      <App>
+        <Window />
+      </App>
+    );
 
-    testRender(<App />);
+    testRender(<Application />);
     expect(BrowserWindow.mock.calls[0][0].show).toBe(false);
   });
 
   test('window can be shown', async () => {
-    const App = () => <Window show />;
+    const Application = () => (
+      <App>
+        <Window show />
+      </App>
+    );
 
-    testRender(<App />);
+    testRender(<Application />);
     expect(BrowserWindow.mock.calls[0][0].show).toBe(true);
   });
 
   test('update', async () => {
     BrowserWindow.mockClear();
 
-    class App extends Component {
+    class Application extends Component {
       state = {
         bool: false
       };
@@ -97,11 +149,15 @@ describe('renderer', () => {
       // }
 
       render() {
-        return <Window />;
+        return (
+          <App>
+            <Window />
+          </App>
+        );
       }
     }
 
-    const wrapper = testRender(<App />);
+    const wrapper = testRender(<Application />);
     // await new Promise(resolve => setTimeout(resolve, 3000));
   });
 });
