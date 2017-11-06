@@ -6,17 +6,16 @@
   "author": "Niels Vleeming",
   "license": "MIT",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "(cd ./packages/react-conductor && yarn test)",
+    "test:watch": "(cd ./packages/react-conductor && yarn test:watch)",
+    "start": "(cd ./packages/example && yarn start)"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-react": "^6.24.1",
-    "babel-preset-stage-0": "^6.24.1",
-    "jest": "^21.2.1",
     "prettier": "^1.7.4"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
 }
