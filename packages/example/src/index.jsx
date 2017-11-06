@@ -25,6 +25,9 @@ class Application extends React.Component {
           console.log('argv', argv);
           console.log('cwd', cwd);
         }}
+        onReady={launchInfo => {
+          console.log('ready', launchInfo);
+        }}
       >
         <Window show>
           <Window show />

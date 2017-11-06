@@ -38,6 +38,11 @@ class App extends Base {
     onInit(process.argv, process.cwd());
   }
 
+  handleOnReady(onReady) {
+    console.log('handle on ready');
+    onReady(this.root.launchInfo);
+  }
+
   handleEvent(event) {
     // TODO: make event handling more generic + remove old handlers on change
     return (newValue, oldValue) => {
@@ -48,9 +53,6 @@ class App extends Base {
   get propEvents() {
     return {
       onWillFinishLaunching: 'will-finish-launching',
-      // Will not trigger because we wait with rendering until this event has
-      // passed. Should probably call this in commitMount if set
-      onReady: 'ready',
       onWindowAllClosed: 'window-all-closed',
       onBeforeQuit: 'before-quit',
       onWillQuit: 'will-quit',
@@ -86,7 +88,10 @@ class App extends Base {
       // when we implement `app.makeSingleInstance(callback)`, making the API
       // uniform to the user. Note the array notation which makes sure this
       // prop only gets called on mount.
-      onInit: [this.handleInit.bind(this)]
+      onInit: [this.handleInit.bind(this)],
+      // As we wait with rendering anything until the `app.onReady` event is
+      // called, we have to call it ourselves on mount.
+      onReady: [this.handleOnReady.bind(this)]
     };
   }
 }

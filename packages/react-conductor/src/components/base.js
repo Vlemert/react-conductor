@@ -19,6 +19,10 @@ class Base {
    * or:
    * { propKey: [mountHandler, updateHandler] }
    * Should be overridden in subclass
+   *
+   * TODO: `propHandlers` being an object prevents us from forcing a processing
+   * order, might want to change that. (App.onInit and App.onReady are in the
+   * correct order by accident for example)
    */
   get propHandlers() {
     return {};

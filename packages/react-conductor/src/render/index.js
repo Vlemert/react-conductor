@@ -13,7 +13,11 @@ async function render(element) {
 
   // We wait for app to be ready before doing anything. This works for now, but
   // there might be a better way to do this
-  app.once('ready', () => {
+  app.once('ready', launchInfo => {
+    // This is the only way to get `launchInfo` into the tree for now (we need
+    // it for the `App.onReady` prop)
+    container.launchInfo = launchInfo;
+
     // Schedules a top level update with current fiber and a priority level (depending upon the context)
     ElectronRenderer.updateContainer(element, node, null);
   });
