@@ -1,0 +1,5 @@
+{
+  "rootDir": "../",
+  "collectCoverage": true,
+  "coveragePathIgnorePatterns": ["/node_modules/", "/test/"]
+}

@@ -12,8 +12,8 @@
     "react-reconciler": "0.2.0"
   },
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "jest --config=./test/config.js",
+    "test:watch": "jest --config=./test/config.dev.js --watch"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
