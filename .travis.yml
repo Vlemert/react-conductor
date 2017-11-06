@@ -1,2 +1,5 @@
 install: yarn
 script: yarn test
+language: node_js
+node_js:
+  - "node"
