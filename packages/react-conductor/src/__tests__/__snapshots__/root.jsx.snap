@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Root throws if something else than an App is appended to it 1`] = `"Root element should be an App!"`;

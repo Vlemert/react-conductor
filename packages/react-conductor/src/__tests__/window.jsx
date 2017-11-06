@@ -1,58 +1,17 @@
 import React, { Component } from 'react';
-import { app, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 
-import { App, Window, render } from '../index';
+import { App, Window } from '../index';
 import testRender from '../test-renderer';
 
 jest.mock('electron');
 
-describe('renderer', () => {
+describe('Window', () => {
   beforeEach(() => {
     BrowserWindow.mockReset();
   });
 
-  test('renders a root', () => {
-    const Application = () => null;
-
-    const wrapper = testRender(<Application />);
-
-    expect(wrapper.electronApp).toBe(app);
-  });
-
-  test('throws if the root element is not an App', () => {
-    // Hide react error details from the console
-    const originalConsoleError = console.error;
-    console.error = jest.fn();
-
-    const Application = () => <Window />;
-
-    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
-
-    // And restore console.error behaviour
-    console.error = originalConsoleError;
-  });
-
-  test('renders an app', () => {
-    const Application = () => <App />;
-
-    const wrapper = testRender(<Application />);
-
-    // Not sure what to assert here..
-    expect(wrapper.appElement.root.electronApp).toBe(app);
-  });
-
-  test('registers app events', () => {
-    app.on = jest.fn();
-    const Application = () => <App onBrowserWindowBlur={blurHandler} />;
-
-    const blurHandler = () => {};
-    testRender(<Application />);
-
-    expect(app.on).toBeCalledWith('browser-window-blur', blurHandler);
-    delete app.on;
-  });
-
-  test('renders a window', () => {
+  test('can render inside App', () => {
     const Application = () => (
       <App>
         <Window />
@@ -68,7 +27,7 @@ describe('renderer', () => {
     );
   });
 
-  test('renders multiple windows', () => {
+  test('can render more than once in App', () => {
     const Application = () => (
       <App>
         <Window key="1" />
@@ -88,7 +47,7 @@ describe('renderer', () => {
     );
   });
 
-  test('renders windows in windows', () => {
+  test('can be nested', () => {
     const Application = () => (
       <App>
         <Window>
@@ -110,7 +69,7 @@ describe('renderer', () => {
     expect(windowChild.browserWindow).toBeInstanceOf(BrowserWindow);
   });
 
-  test('window is hidden by default', () => {
+  test('is hidden by default', () => {
     const Application = () => (
       <App>
         <Window />
@@ -121,7 +80,7 @@ describe('renderer', () => {
     expect(BrowserWindow.mock.calls[0][0].show).toBe(false);
   });
 
-  test('window can be shown', async () => {
+  test('can be shown', async () => {
     const Application = () => (
       <App>
         <Window show />
