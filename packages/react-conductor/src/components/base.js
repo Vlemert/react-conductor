@@ -31,7 +31,12 @@ class Base {
   }
 
   /**
-   * Helper that turns all entries in `propEvents` into actual event handlers
+   * Helper that turns all entries in `propEvents` into actual event handlers.
+   * Changes:
+   * { propKey: 'event-name' }
+   * Into:
+   * { propKey: handlerFunction }
+   * Where `handlerFunction` defaults to `this.handleEvent('event-name')`.
    */
   propEventHandlers = Object.entries(
     this.propEvents
