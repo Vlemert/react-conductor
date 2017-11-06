@@ -44,7 +44,6 @@ class App extends Base {
   }
 
   handleOnReady(onReady) {
-    console.log('handle on ready');
     onReady(this.root.launchInfo);
   }
 
