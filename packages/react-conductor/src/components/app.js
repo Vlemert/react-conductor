@@ -71,9 +71,12 @@ class App extends Base {
     };
   }
 
+  /**
+   * Note: we need to bind the handlers to preserve `this` context.
+   */
   get propHandlers() {
     return {
-      dockBounce: this.handleDockBounce
+      dockBounce: this.handleDockBounce.bind(this)
     };
   }
 }
