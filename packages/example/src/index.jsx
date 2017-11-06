@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, App, Window } from '../../react-conductor/src/index';
+import { render, App, Window } from '@react-conductor/core';
 
 class Application extends React.Component {
   state = {
