@@ -18,7 +18,8 @@ async function render(element) {
     // it for the `App.onReady` prop)
     container.launchInfo = launchInfo;
 
-    // Schedules a top level update with current fiber and a priority level (depending upon the context)
+    // Schedules a top level update with current fiber and a priority level
+    // (depending upon the context)
     ElectronRenderer.updateContainer(element, node, null);
   });
 
