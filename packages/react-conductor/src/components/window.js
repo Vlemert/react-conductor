@@ -1,9 +1,10 @@
 import { BrowserWindow } from 'electron';
 
-class Window {
+import Base from './base';
+
+class Window extends Base {
   constructor(root, props) {
-    this.root = root;
-    this.props = props;
+    super(root, props);
 
     this.childWindows = new Set();
 
@@ -22,35 +23,6 @@ class Window {
     if (child instanceof Window) {
       this.childWindows.delete(child);
     }
-  }
-
-  renderChildNode() {
-    for (let i = 0; i < this.children.length; i += 1) {
-      console.log('render child!');
-      if (typeof this.children[i] === 'object') {
-        this.children[i].render();
-      }
-    }
-  }
-
-  render() {
-    this.renderChildNode();
-  }
-
-  finalizeInitialChildren(props) {
-    return false;
-  }
-
-  commitMount(props) {
-    // noop
-  }
-
-  prepareUpdate(oldProps, newProps) {
-    return true;
-  }
-
-  commitUpdate(updatePayload, oldProps, newProps) {
-    // noop
   }
 }
 
