@@ -31,4 +31,17 @@ describe('Root', () => {
     // And restore console.error behaviour
     console.error = originalConsoleError;
   });
+
+  test('throws when trying to render a string', () => {
+    // Hide react error details from the console
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+
+    const Application = () => 'hello';
+
+    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
+
+    // And restore console.error behaviour
+    console.error = originalConsoleError;
+  });
 });
