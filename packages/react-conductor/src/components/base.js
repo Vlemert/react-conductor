@@ -13,8 +13,11 @@ class Base {
   }
 
   /**
-   * Definition of all (non-event) props that an element handles. Format:
+   * Definition of all (non-event) props that an element handles. Format can
+   * be either:
    * { propKey: handlerFunction }
+   * or:
+   * { propKey: [mountHandler, updateHandler] }
    * Should be overridden in subclass
    */
   get propHandlers() {
@@ -78,7 +81,17 @@ class Base {
   commitMount(props) {
     Object.entries(props).forEach(([propKey, propValue]) => {
       if (this.allPropHandlers.hasOwnProperty(propKey)) {
-        this.allPropHandlers[propKey](propValue);
+        const handler = this.allPropHandlers[propKey];
+
+        if (Array.isArray(handler)) {
+          const mountHandler = handler[0];
+          if (mountHandler) {
+            mountHandler(propValue);
+          }
+          return;
+        }
+
+        handler(propValue);
       }
     });
   }
@@ -131,7 +144,17 @@ class Base {
   commitUpdate(updatePayload, oldProps, newProps) {
     updatePayload.forEach(([propKey, value]) => {
       if (this.allPropHandlers.hasOwnProperty(propKey)) {
-        this.allPropHandlers[propKey](value);
+        const handler = this.allPropHandlers[propKey];
+
+        if (Array.isArray(handler)) {
+          const updateHandler = handler[1];
+          if (updateHandler) {
+            updateHandler(value);
+          }
+          return;
+        }
+
+        handler(value);
       }
     });
   }

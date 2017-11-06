@@ -21,6 +21,10 @@ class Application extends React.Component {
       <App
         onBrowserWindowBlur={() => console.log('blurrrrr')}
         dockBounce={this.state.bounce && 'critical'}
+        onInit={(argv, cwd) => {
+          console.log('argv', argv);
+          console.log('cwd', cwd);
+        }}
       >
         <Window show>
           <Window show />

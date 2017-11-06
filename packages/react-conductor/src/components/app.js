@@ -34,6 +34,10 @@ class App extends Base {
     }
   }
 
+  handleInit(onInit) {
+    onInit(process.argv, process.cwd());
+  }
+
   handleEvent(event) {
     // TODO: make event handling more generic + remove old handlers on change
     return (newValue, oldValue) => {
@@ -76,7 +80,13 @@ class App extends Base {
    */
   get propHandlers() {
     return {
-      dockBounce: this.handleDockBounce.bind(this)
+      dockBounce: this.handleDockBounce.bind(this),
+      // onInit is a hook users can use to access the `process.argv` and
+      // `process.cwd()` values. This prop/handler can later on also be called
+      // when we implement `app.makeSingleInstance(callback)`, making the API
+      // uniform to the user. Note the array notation which makes sure this
+      // prop only gets called on mount.
+      onInit: [this.handleInit.bind(this)]
     };
   }
 }
