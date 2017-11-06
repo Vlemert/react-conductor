@@ -45,7 +45,11 @@ class Window {
     // noop
   }
 
-  commitUpdate(oldProps, newProps) {
+  prepareUpdate(oldProps, newProps) {
+    return true;
+  }
+
+  commitUpdate(updatePayload, oldProps, newProps) {
     // noop
   }
 }

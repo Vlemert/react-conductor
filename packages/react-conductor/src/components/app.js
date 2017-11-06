@@ -50,18 +50,6 @@ class App {
     }
   }
 
-  finalizeInitialChildren(props) {
-    Object.entries(props).forEach(([propKey, eventHandler]) => {
-      const eventName = PropToEvent[propKey];
-
-      if (eventName) {
-        this.root.electronApp.on(eventName, eventHandler);
-      }
-    });
-
-    return false;
-  }
-
   // This is mainly here to test whether I could get this to work
   // Might want to move all the app.dock stuff to a different element
   handleDockBounce = dockBounce => {
@@ -70,18 +58,109 @@ class App {
         dockBounce === true ? undefined : dockBounce
       );
     } else {
-      this.root.electronApp.dock.cancelBounce(this.dockBounceId);
+      if (this.dockBounceId !== undefined) {
+        this.root.electronApp.dock.cancelBounce(this.dockBounceId);
+      }
     }
   };
 
-  commitMount(props) {
-    this.handleDockBounce(props.dockBounce);
+  /**
+   * An object containing all props that this elements can handle, with their
+   * actual handlers.
+   */
+  get propHandlers() {
+    return {
+      dockBounce: this.handleDockBounce
+    };
   }
 
-  commitUpdate(oldProps, newProps) {
-    if (oldProps.dockBounce !== newProps.dockBounce) {
-      this.handleDockBounce(newProps.dockBounce);
-    }
+  /**
+   * First finalization pass. Here we check whether we'll need to do anything
+   * in `commitMount` by checking if any of the handled props has a value.
+   */
+  finalizeInitialChildren(props) {
+    let commitMount = false;
+
+    Object.entries(props).forEach(([propKey, eventHandler]) => {
+      if (this.propHandlers.hasOwnProperty(propKey)) {
+        commitMount = true;
+      }
+
+      // TODO: move actual event registration to commitMount
+      const eventName = PropToEvent[propKey];
+
+      if (eventName) {
+        this.root.electronApp.on(eventName, eventHandler);
+      }
+    });
+
+    return commitMount;
+  }
+
+  /**
+   * Handle any props that were passed in the initial mount of the element. We
+   * should probably register any events here as well, instead of in
+   * `finalizeInitialChildren`
+   */
+  commitMount(props) {
+    Object.entries(props).forEach(([propKey, propValue]) => {
+      if (this.propHandlers.hasOwnProperty(propKey)) {
+        this.propHandlers[propKey](propValue);
+      }
+    });
+  }
+
+  /**
+   * Diff all props and check whether we're handling them in this element
+   * instance. If a handled prop was changed, return the change as
+   * `updatePayload` so `commitUpdate` can work with the changes.
+   *
+   * `updatePayload` will be a list of tuples: [[propKey, newValue]]
+   */
+  prepareUpdate(oldProps, newProps) {
+    const updatePayload = [];
+    const mergedProps = {};
+
+    Object.entries(oldProps).forEach(([key, value]) => {
+      if (!this.propHandlers.hasOwnProperty(key)) {
+        return;
+      }
+
+      mergedProps[key] = [value, undefined];
+    });
+
+    Object.entries(newProps).forEach(([key, value]) => {
+      if (!this.propHandlers.hasOwnProperty(key)) {
+        return;
+      }
+
+      if (mergedProps[key]) {
+        mergedProps[key][1] = value;
+        return;
+      }
+
+      mergedProps[key] = [undefined, value];
+    });
+
+    Object.entries(mergedProps).forEach(([propKey, [oldValue, newValue]]) => {
+      if (oldValue !== newValue) {
+        updatePayload.push([propKey, newValue]);
+      }
+    });
+
+    return updatePayload.length ? updatePayload : null;
+  }
+
+  /**
+   * Handle any props (that this element handles) that changed since the last
+   * pass. See `prepareUpdate` for the origin / shape of `updatePayload`.
+   */
+  commitUpdate(updatePayload, oldProps, newProps) {
+    updatePayload.forEach(([propKey, value]) => {
+      if (this.propHandlers.hasOwnProperty(propKey)) {
+        this.propHandlers[propKey](value);
+      }
+    });
   }
 }
 

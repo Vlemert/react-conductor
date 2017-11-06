@@ -32,8 +32,8 @@ const ElectronRenderer = Reconciler({
     // noop
   },
 
-  prepareUpdate(wordElement, type, oldProps, newProps) {
-    return true;
+  prepareUpdate(instance, type, oldProps, newProps) {
+    return instance.prepareUpdate(oldProps, newProps);
   },
 
   resetAfterCommit() {
@@ -82,10 +82,10 @@ const ElectronRenderer = Reconciler({
     },
 
     commitUpdate(instance, updatePayload, type, oldProps, newProps) {
-      instance.commitUpdate(oldProps, newProps);
+      instance.commitUpdate(updatePayload, oldProps, newProps);
     },
 
-    commitMount(props) {
+    commitMount(instance, type, props) {
       instance.commitMount(props);
     },
 
