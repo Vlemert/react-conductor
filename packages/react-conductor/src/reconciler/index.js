@@ -24,8 +24,8 @@ const ElectronRenderer = Reconciler({
     return instance.finalizeInitialChildren(props);
   },
 
-  getPublicInstance(inst) {
-    return inst;
+  getPublicInstance(instance) {
+    return instance.getPublicInstance();
   },
 
   prepareForCommit() {

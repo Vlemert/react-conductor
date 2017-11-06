@@ -4,6 +4,10 @@ class Base {
     this.props = props;
   }
 
+  getPublicInstance() {
+    return this;
+  }
+
   /**
    * Default event handler. Not yet implemented until we make events more
    * generic. For now handled in subclass.
@@ -32,6 +36,9 @@ class Base {
    * Definition of all event props that an element handles. Format:
    * { propKey: 'event-name' }
    * * Should be overridden in subclass
+   *
+   * TODO: think about whether we want to support some kind of `once` event
+   * handling, vs `on`.
    */
   get propEvents() {
     return {};

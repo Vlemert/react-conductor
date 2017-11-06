@@ -28,6 +28,9 @@ class Application extends React.Component {
         onReady={launchInfo => {
           console.log('ready', launchInfo);
         }}
+        ref={ref => {
+          console.log('got ref', ref);
+        }}
       >
         <Window show>
           <Window show />

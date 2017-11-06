@@ -24,6 +24,11 @@ class Window extends Base {
       this.childWindows.delete(child);
     }
   }
+
+  getPublicInstance() {
+    // TODO: think about whether we want to grant the user full access here
+    return this.browserWindow;
+  }
 }
 
 export default Window;

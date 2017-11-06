@@ -20,6 +20,11 @@ class App extends Base {
     }
   }
 
+  getPublicInstance() {
+    // TODO: think about whether we want to grant the user full access here
+    return this.root.electronApp;
+  }
+
   // This is mainly here to test whether I could get this to work
   // Might want to move all the app.dock stuff to a different element
   handleDockBounce(newValue) {
