@@ -5,6 +5,7 @@ import { App, Window } from '../index';
 import testRender from '../test-renderer';
 
 jest.mock('electron');
+jest.useFakeTimers();
 
 describe('Window', () => {
   beforeEach(() => {
@@ -47,6 +48,23 @@ describe('Window', () => {
     );
   });
 
+  test('returns a `BrowserWindow` as ref', () => {
+    let windowRef;
+    const Application = () => (
+      <App>
+        <Window
+          ref={ref => {
+            windowRef = ref;
+          }}
+        />
+      </App>
+    );
+
+    testRender(<Application />);
+
+    expect(windowRef).toBeInstanceOf(BrowserWindow);
+  });
+
   test('can be nested', () => {
     const Application = () => (
       <App>
@@ -67,6 +85,90 @@ describe('Window', () => {
     const windowChildIterator = appChild.childWindows.values();
     const windowChild = windowChildIterator.next().value;
     expect(windowChild.browserWindow).toBeInstanceOf(BrowserWindow);
+  });
+
+  describe('registers child windows correctly', () => {
+    let wrapper;
+    beforeEach(() => {
+      class Application extends React.Component {
+        state = {
+          childWindow: true
+        };
+
+        componentDidMount() {
+          setTimeout(() => {
+            this.setState({
+              childWindow: false
+            });
+          }, 2000);
+        }
+
+        render() {
+          return (
+            <App>
+              <Window>{this.state.childWindow && <Window />}</Window>
+            </App>
+          );
+        }
+      }
+
+      wrapper = testRender(<Application />);
+    });
+
+    test('when adding', () => {
+      const appChildIterator = wrapper.appElement.childWindows.values();
+      const appChild = appChildIterator.next().value;
+      expect(appChild.childWindows.size).toBe(1);
+    });
+
+    test('when removing', () => {
+      jest.runTimersToTime(2000);
+      const appChildIterator = wrapper.appElement.childWindows.values();
+      const appChild = appChildIterator.next().value;
+      expect(appChild.childWindows.size).toBe(0);
+    });
+  });
+
+  describe('does nothing with non-window children', () => {
+    let wrapper;
+    beforeEach(() => {
+      class Application extends React.Component {
+        state = {
+          child: true
+        };
+
+        componentDidMount() {
+          setTimeout(() => {
+            this.setState({
+              child: false
+            });
+          }, 2000);
+        }
+
+        render() {
+          return (
+            <App>
+              <Window>{this.state.child && <App />}</Window>
+            </App>
+          );
+        }
+      }
+
+      wrapper = testRender(<Application />);
+    });
+
+    test('when adding', () => {
+      const appChildIterator = wrapper.appElement.childWindows.values();
+      const appChild = appChildIterator.next().value;
+      expect(appChild.childWindows.size).toBe(0);
+    });
+
+    test('when removing', () => {
+      jest.runTimersToTime(2000);
+      const appChildIterator = wrapper.appElement.childWindows.values();
+      const appChild = appChildIterator.next().value;
+      expect(appChild.childWindows.size).toBe(0);
+    });
   });
 
   test('is hidden by default', () => {
