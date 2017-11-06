@@ -4,12 +4,17 @@ const props = [];
 
 const PropToEvent = {
   onWillFinishLaunching: 'will-finish-launching',
+  // Will not trigger because we wait with rendering until this event has
+  // passed. Should probably call this in commitMount if set
   onReady: 'ready',
   onWindowAllClosed: 'window-all-closed',
   onBeforeQuit: 'before-quit',
   onWillQuit: 'will-quit',
   onQuit: 'quit',
+  // open-file needs to be registered very early, should probably do that in
+  // the constructor and call the prop/handler in commitMount
   onOpenFile: 'open-file',
+  // Same as open-file
   onOpenUrl: 'open-url',
   onActivate: 'activate',
   onContinueActivity: 'continue-activity',
