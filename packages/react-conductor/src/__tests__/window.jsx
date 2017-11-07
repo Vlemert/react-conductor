@@ -408,4 +408,223 @@ describe('Window', () => {
       });
     });
   });
+
+  describe('correctly handles `defaultPosition`, `position`, and `onMove`', () => {
+    class BrowserWindowMock {
+      setPosition(...position) {
+        this.position = position;
+      }
+      getPosition() {
+        return this.position;
+      }
+      setMovable(resizable) {
+        this.resizable = resizable;
+      }
+      getMovable() {
+        return this.resizable;
+      }
+      on = jest.fn();
+      removeListener = jest.fn();
+    }
+
+    let browserWindowInstance;
+
+    beforeEach(() => {
+      BrowserWindow.mockImplementation(() => {
+        browserWindowInstance = new BrowserWindowMock();
+        return browserWindowInstance;
+      });
+    });
+
+    afterEach(() => {
+      BrowserWindow.mockClear();
+    });
+
+    describe('on mount', () => {
+      test('if only `defaultPosition` is set', () => {
+        const Application = () => (
+          <App>
+            <Window defaultPosition={[100, 200]} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+      });
+
+      test('if only `position` is set', () => {
+        const Application = () => (
+          <App>
+            <Window position={[100, 200]} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(false);
+      });
+
+      test('if `position` and `onMove` are set', () => {
+        const onMove = jest.fn();
+        const Application = () => (
+          <App>
+            <Window position={[100, 200]} onMove={onMove} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler = browserWindowInstance.on.mock.calls[0][1];
+        onMoveHandler();
+        expect(onMove).toBeCalledWith([100, 200]);
+      });
+    });
+
+    describe('on update', () => {
+      test('if only `defaultPosition` is set', () => {
+        class Application extends React.Component {
+          state = {
+            defaultPosition: [100, 200]
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                defaultPosition: [200, 400]
+              });
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window defaultPosition={this.state.defaultPosition} />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+
+        jest.runTimersToTime(2000);
+
+        // TODO: we probably shouldn't allow this, update the test once we
+        // update the implementation
+        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+      });
+
+      test('if only `position` is set', () => {
+        class Application extends React.Component {
+          state = {
+            position: [100, 200]
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                position: [200, 400]
+              });
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window position={this.state.position} />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(false);
+
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
+        expect(browserWindowInstance.getMovable()).toBe(false);
+      });
+
+      test('if `position` and `onMove` are set', () => {
+        const onMove1 = jest.fn();
+        const onMove2 = jest.fn();
+
+        class Application extends React.Component {
+          state = {
+            position: [100, 200],
+            onMove: onMove1
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                position: [200, 400]
+              });
+
+              setTimeout(() => {
+                this.setState({
+                  onMove: onMove2
+                });
+              }, 2000);
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window
+                  position={this.state.position}
+                  onMove={this.state.onMove}
+                />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler1 = browserWindowInstance.on.mock.calls[0][1];
+        onMoveHandler1();
+        expect(onMove1).toBeCalledWith([100, 200]);
+
+        browserWindowInstance.on.mockClear();
+        onMove1.mockClear();
+        onMove2.mockClear();
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+        expect(browserWindowInstance.on).not.toBeCalled();
+
+        browserWindowInstance.on.mockClear();
+        onMove1.mockClear();
+        onMove2.mockClear();
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
+        expect(browserWindowInstance.getMovable()).toBe(true);
+        expect(browserWindowInstance.removeListener).toBeCalled();
+        expect(browserWindowInstance.removeListener.mock.calls[0][0]).toBe(
+          'move'
+        );
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler2 = browserWindowInstance.on.mock.calls[0][1];
+        onMoveHandler2();
+        expect(onMove1).not.toBeCalled();
+        expect(onMove2).toBeCalledWith([200, 400]);
+      });
+    });
+  });
 });

@@ -9,7 +9,8 @@ import { render, App, Window } from '@react-conductor/core';
 class Application extends React.Component {
   state = {
     bounce: false,
-    size: [100, 300]
+    size: [100, 300],
+    position: [100, 100]
   };
 
   componentDidMount() {
@@ -29,6 +30,17 @@ class Application extends React.Component {
     });
   };
 
+  onMove = position => {
+    console.log('move!', position);
+    this.setState({
+      position
+    });
+  };
+
+  getRef = ref => {
+    console.log('got ref', ref);
+  };
+
   render() {
     return (
       <App
@@ -41,13 +53,11 @@ class Application extends React.Component {
         onReady={launchInfo => {
           console.log('ready', launchInfo);
         }}
-        ref={ref => {
-          console.log('got ref', ref);
-        }}
+        ref={this.getRef}
       >
-        <Window show defaultSize={[100, 200]}>
+        <Window show defaultSize={[100, 200]} defaultPosition={[50, 50]}>
           <Window show size={this.state.size} onResize={this.onResize} />
-          <Window show />
+          <Window show position={this.state.position} onMove={this.onMove} />
         </Window>
       </App>
     );

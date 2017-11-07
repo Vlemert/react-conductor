@@ -90,10 +90,53 @@ class Window extends Base {
   }
 
   /**
+   * Same as `handleSize` above. This is a lot of practically the same code, we
+   * might want to do something with that in the future. Lets wait with that
+   * until the implementation is complete (including error/warning messages).
+   */
+  handlePosition(propValue, newProps, oldProps) {
+    if (
+      (!oldProps && newProps.onMove) ||
+      (oldProps && newProps.onMove !== oldProps.onMove)
+    ) {
+      this.eventManager('move', () => {
+        newProps.onMove(this.browserWindow.getPosition());
+      });
+    }
+
+    if (!newProps.defaultPosition && !newProps.position) {
+      this.browserWindow.setMovable(true);
+      return;
+    }
+
+    // TODO: only do this on mount?
+    if (newProps.defaultPosition) {
+      this.browserWindow.setPosition(...newProps.defaultPosition);
+      this.browserWindow.setMovable(true);
+      return;
+    }
+
+    if (newProps.position && !newProps.onMove) {
+      // TODO: reactdom would warn if you do this, something like:
+      // "If the field should be mutable use `defaultValue`. Otherwise, set
+      // either `onChange` or `readOnly`."
+      this.browserWindow.setPosition(...newProps.position);
+      this.browserWindow.setMovable(false);
+      return;
+    }
+
+    if (newProps.position && newProps.onMove) {
+      this.browserWindow.setPosition(...newProps.position);
+      this.browserWindow.setMovable(true);
+    }
+  }
+
+  /**
    * Note: we need to bind the handlers to preserve `this` context.
    */
   get propHandlers() {
     const handleSize = this.handleSize.bind(this);
+    const handlePosition = this.handlePosition.bind(this);
     return {
       // We can bind multiple props to the same handler because the base class
       // will only call each handler once when props change. This does mean our
@@ -103,7 +146,11 @@ class Window extends Base {
       // I think it would be nice if this could be handled like other events.
       // That would mean event handling needs some kind of mapping support. (to
       // map the raw event to something 'nice' for the user)
-      onResize: handleSize
+      onResize: handleSize,
+      // We handle position in the same way as we do with size
+      defaultPosition: handlePosition,
+      position: handlePosition,
+      onMove: handlePosition
     };
   }
 }
