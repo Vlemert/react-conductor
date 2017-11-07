@@ -1,9 +1,9 @@
 {
   "entry": "src/index.js",
+  "main": "lib/index.js",
   "name": "@react-conductor/core",
   "version": "0.1.0",
   "description": "React renderer for Electron",
-  "main": "src/index.js",
   "author": "Niels Vleeming",
   "license": "MIT",
   "dependencies": {
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "test": "jest --config=./test/config.js",
-    "test:watch": "jest --config=./test/config.dev.js --watch"
+    "test:watch": "jest --config=./test/config.dev.js --watch",
+    "build": "babel -d lib/ src/"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
