@@ -14,7 +14,7 @@
   "scripts": {
     "test": "jest --config=./test/config.js",
     "test:watch": "jest --config=./test/config.dev.js --watch",
-    "build": "babel -d lib/ src/"
+    "build": "babel --ignore __tests__ -d lib/ src/"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
