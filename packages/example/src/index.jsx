@@ -2,9 +2,7 @@ import React from 'react';
 import { render, App, Window } from '@react-conductor/core';
 
 /**
- * TODO: we really need a way to have multiple examples. Possibly by having
- * multiple entry points and allowing the user to configure which example to
- * run through a command line argument.
+ * TODO: clean this up / make multiple examples out of it
  */
 class Application extends React.Component {
   state = {

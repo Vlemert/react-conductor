@@ -132,6 +132,24 @@ class Window extends Base {
   }
 
   /**
+   * Set a path for the window to load. If the path doesn't start with either
+   * http://, https://, or file://, we assume it's a local path and prepend it
+   * with file://
+   */
+  handlePath(path) {
+    if (
+      path.indexOf('file://') === 0 ||
+      path.indexOf('http://') === 0 ||
+      path.indexOf('https://') === 0
+    ) {
+      this.browserWindow.loadURL(path);
+      return;
+    }
+
+    this.browserWindow.loadURL(`file://${path}`);
+  }
+
+  /**
    * Note: we need to bind the handlers to preserve `this` context.
    */
   get propHandlers() {
@@ -150,7 +168,8 @@ class Window extends Base {
       // We handle position in the same way as we do with size
       defaultPosition: handlePosition,
       position: handlePosition,
-      onMove: handlePosition
+      onMove: handlePosition,
+      path: this.handlePath.bind(this)
     };
   }
 }
