@@ -4,5 +4,6 @@ module.exports = {
   app: jest.fn(),
   remote: jest.fn(),
   dialog: jest.fn(),
-  BrowserWindow: jest.fn()
+  BrowserWindow: jest.fn(),
+  Menu: jest.fn()
 };

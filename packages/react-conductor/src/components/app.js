@@ -1,12 +1,14 @@
 import createEventManager from '../utils/create-event-manager';
 import Base from './base';
 import Window from './window';
+import Menu from './menu';
 
 class App extends Base {
   constructor(root, props) {
     super(root, props);
 
     this.childWindows = new Set();
+    this.childMenus = new Set();
     this.eventManager = createEventManager(this.root.electronApp);
   }
 
@@ -14,11 +16,19 @@ class App extends Base {
     if (child instanceof Window) {
       this.childWindows.add(child);
     }
+
+    if (child instanceof Menu) {
+      this.childMenus.add(child);
+    }
   }
 
   removeChild(child) {
     if (child instanceof Window) {
       this.childWindows.delete(child);
+    }
+
+    if (child instanceof Menu) {
+      this.childMenus.delete(child);
     }
   }
 

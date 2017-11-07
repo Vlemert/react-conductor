@@ -12,6 +12,10 @@ describe('Window', () => {
     BrowserWindow.mockReset();
   });
 
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
   test('can render inside App', () => {
     const Application = () => (
       <App>
