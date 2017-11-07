@@ -6,7 +6,7 @@ Creating Electron applications using React.
 
 Inspired by [react-ionize](https://github.com/mhink/react-ionize).
 
-`react-ionize` is a library that aims to narrow the divide between an Electron application's `main` and `renderer` processes when working with React. It allows you to apply the concepts you're already used to in your `renderer` processes, to the `main` process of your application. 
+`react-conductor` is a library that aims to narrow the divide between an Electron application's `main` and `renderer` processes when working with React. It allows you to apply the concepts you're already used to in your `renderer` processes, to the `main` process of your application. 
 
 ## Example
 Code is worth a thousand words, so here's an example:
