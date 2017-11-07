@@ -8,7 +8,8 @@ import { render, App, Window } from '@react-conductor/core';
  */
 class Application extends React.Component {
   state = {
-    bounce: false
+    bounce: false,
+    size: [100, 300]
   };
 
   componentDidMount() {
@@ -20,6 +21,13 @@ class Application extends React.Component {
       5000
     );
   }
+
+  onResize = size => {
+    console.log('resize!', size);
+    this.setState({
+      size
+    });
+  };
 
   render() {
     return (
@@ -37,8 +45,8 @@ class Application extends React.Component {
           console.log('got ref', ref);
         }}
       >
-        <Window show>
-          <Window show />
+        <Window show defaultSize={[100, 200]}>
+          <Window show size={this.state.size} onResize={this.onResize} />
           <Window show />
         </Window>
       </App>

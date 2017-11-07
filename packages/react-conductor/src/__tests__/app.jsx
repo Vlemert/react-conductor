@@ -8,6 +8,10 @@ jest.mock('electron');
 jest.useFakeTimers();
 
 describe('App', () => {
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
   test('can render', () => {
     const Application = () => <App />;
 
@@ -17,16 +21,57 @@ describe('App', () => {
     expect(wrapper.appElement.root.electronApp).toBe(app);
   });
 
-  test('registers app events', () => {
-    app.on = jest.fn();
+  test('app events are registered, updated, and removed', () => {
+    const handler1 = () => {};
+    const handler2 = () => {};
 
-    const blurHandler = () => {};
-    const Application = () => <App onBrowserWindowBlur={blurHandler} />;
+    app.on = jest.fn();
+    app.removeListener = jest.fn();
+
+    class Application extends React.Component {
+      state = {
+        blurHandler: handler1
+      };
+
+      componentDidMount() {
+        setTimeout(() => {
+          this.setState({
+            blurHandler: handler2
+          });
+
+          setTimeout(() => {
+            this.setState({
+              blurHandler: undefined
+            });
+          }, 2000);
+        }, 2000);
+      }
+
+      render() {
+        return <App onBrowserWindowBlur={this.state.blurHandler} />;
+      }
+    }
 
     testRender(<Application />);
 
-    expect(app.on).toBeCalledWith('browser-window-blur', blurHandler);
+    expect(app.on).toBeCalledWith('browser-window-blur', handler1);
+    expect(app.removeListener).not.toBeCalled();
+
+    app.on.mockClear();
+    app.removeListener.mockClear();
+    jest.runTimersToTime(2000);
+
+    expect(app.removeListener).toBeCalledWith('browser-window-blur', handler1);
+    expect(app.on).toBeCalledWith('browser-window-blur', handler2);
+
+    app.on.mockClear();
+    app.removeListener.mockClear();
+    jest.runTimersToTime(2000);
+
+    expect(app.removeListener).toBeCalledWith('browser-window-blur', handler2);
+
     delete app.on;
+    delete app.removeListener;
   });
 
   test('returns `app` as ref', () => {

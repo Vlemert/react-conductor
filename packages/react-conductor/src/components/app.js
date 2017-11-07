@@ -1,3 +1,4 @@
+import createEventManager from '../utils/create-event-manager';
 import Base from './base';
 import Window from './window';
 
@@ -6,6 +7,7 @@ class App extends Base {
     super(root, props);
 
     this.childWindows = new Set();
+    this.eventManager = createEventManager(this.root.electronApp);
   }
 
   appendChild(child) {
@@ -48,9 +50,9 @@ class App extends Base {
   }
 
   handleEvent(event) {
-    // TODO: make event handling more generic + remove old handlers on change
-    return (newValue, oldValue) => {
-      this.root.electronApp.on(event, newValue);
+    // TODO: can we move this to base?
+    return newValue => {
+      this.eventManager(event, newValue);
     };
   }
 

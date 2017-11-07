@@ -24,6 +24,9 @@ class Base {
    * { propKey: [mountHandler, updateHandler] }
    * Should be overridden in subclass
    *
+   * If you use the same handler for multiple props, it will get called only
+   * once on mount / update when multiple props are set / update.
+   *
    * TODO: `propHandlers` being an object prevents us from forcing a processing
    * order, might want to change that. (App.onInit and App.onReady are in the
    * correct order by accident for example)
@@ -90,19 +93,26 @@ class Base {
    * `finalizeInitialChildren`
    */
   commitMount(props) {
+    // We keep a list of handlers we've already called. We assume that if the
+    // same handler is used for multiple props in a subclass, that handler will
+    // make sure that calling it once is sufficient (we pass all props as a
+    // second argument for that situation).
+    const calledHandlers = new Set();
     Object.entries(props).forEach(([propKey, propValue]) => {
       if (this.allPropHandlers.hasOwnProperty(propKey)) {
         const handler = this.allPropHandlers[propKey];
 
         if (Array.isArray(handler)) {
           const mountHandler = handler[0];
-          if (mountHandler) {
-            mountHandler(propValue);
+          if (mountHandler && !calledHandlers.has(mountHandler)) {
+            mountHandler(propValue, props);
+            calledHandlers.add(mountHandler);
           }
           return;
         }
 
-        handler(propValue);
+        handler(propValue, props);
+        calledHandlers.add(handler);
       }
     });
   }
@@ -153,19 +163,24 @@ class Base {
    * pass. See `prepareUpdate` for the origin / shape of `updatePayload`.
    */
   commitUpdate(updatePayload, oldProps, newProps) {
+    // Same as in `commitMount`, but this time we pass the full sets of old and
+    // new props so handlers can do their thing.
+    const calledHandlers = new Set();
     updatePayload.forEach(([propKey, value]) => {
       if (this.allPropHandlers.hasOwnProperty(propKey)) {
         const handler = this.allPropHandlers[propKey];
 
         if (Array.isArray(handler)) {
           const updateHandler = handler[1];
-          if (updateHandler) {
-            updateHandler(value);
+          if (updateHandler && !calledHandlers.has(updateHandler)) {
+            updateHandler(value, newProps, oldProps);
+            calledHandlers.add(updateHandler);
           }
           return;
         }
 
-        handler(value);
+        handler(value, newProps, oldProps);
+        calledHandlers.add(handler);
       }
     });
   }

@@ -193,32 +193,219 @@ describe('Window', () => {
     expect(BrowserWindow.mock.calls[0][0].show).toBe(true);
   });
 
-  test('update', async () => {
-    BrowserWindow.mockClear();
-
-    class Application extends Component {
-      state = {
-        bool: false
-      };
-
-      // componentDidMount() {
-      //   setTimeout(() => {
-      //     this.setState({
-      //       bool: true
-      //     });
-      //   }, 1000);
-      // }
-
-      render() {
-        return (
-          <App>
-            <Window />
-          </App>
-        );
+  describe('correctly handles `defaultSize`, `size`, and `onResize`', () => {
+    class BrowserWindowMock {
+      setSize(...size) {
+        this.size = size;
       }
+      getSize() {
+        return this.size;
+      }
+      setResizable(resizable) {
+        this.resizable = resizable;
+      }
+      getResizable() {
+        return this.resizable;
+      }
+      on = jest.fn();
+      removeListener = jest.fn();
     }
 
-    const wrapper = testRender(<Application />);
-    // await new Promise(resolve => setTimeout(resolve, 3000));
+    let browserWindowInstance;
+
+    beforeEach(() => {
+      BrowserWindow.mockImplementation(() => {
+        browserWindowInstance = new BrowserWindowMock();
+        return browserWindowInstance;
+      });
+    });
+
+    afterEach(() => {
+      BrowserWindow.mockClear();
+    });
+
+    describe('on mount', () => {
+      test('if only `defaultSize` is set', () => {
+        const Application = () => (
+          <App>
+            <Window defaultSize={[100, 200]} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+      });
+
+      test('if only `size` is set', () => {
+        const Application = () => (
+          <App>
+            <Window size={[100, 200]} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(false);
+      });
+
+      test('if `size` and `onResize` are set', () => {
+        const onResize = jest.fn();
+        const Application = () => (
+          <App>
+            <Window size={[100, 200]} onResize={onResize} />
+          </App>
+        );
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler = browserWindowInstance.on.mock.calls[0][1];
+        onResizeHandler();
+        expect(onResize).toBeCalledWith([100, 200]);
+      });
+    });
+
+    describe('on update', () => {
+      test('if only `defaultSize` is set', () => {
+        class Application extends React.Component {
+          state = {
+            defaultSize: [100, 200]
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                defaultSize: [200, 400]
+              });
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window defaultSize={this.state.defaultSize} />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+
+        jest.runTimersToTime(2000);
+
+        // TODO: we probably shouldn't allow this, update the test once we
+        // update the implementation
+        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+      });
+
+      test('if only `size` is set', () => {
+        class Application extends React.Component {
+          state = {
+            size: [100, 200]
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                size: [200, 400]
+              });
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window size={this.state.size} />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(false);
+
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
+        expect(browserWindowInstance.getResizable()).toBe(false);
+      });
+
+      test('if `size` and `onResize` are set', () => {
+        const onResize1 = jest.fn();
+        const onResize2 = jest.fn();
+
+        class Application extends React.Component {
+          state = {
+            size: [100, 200],
+            onResize: onResize1
+          };
+
+          componentDidMount() {
+            setTimeout(() => {
+              this.setState({
+                size: [200, 400]
+              });
+
+              setTimeout(() => {
+                this.setState({
+                  onResize: onResize2
+                });
+              }, 2000);
+            }, 2000);
+          }
+
+          render() {
+            return (
+              <App>
+                <Window size={this.state.size} onResize={this.state.onResize} />
+              </App>
+            );
+          }
+        }
+
+        testRender(<Application />);
+        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler1 = browserWindowInstance.on.mock.calls[0][1];
+        onResizeHandler1();
+        expect(onResize1).toBeCalledWith([100, 200]);
+
+        browserWindowInstance.on.mockClear();
+        onResize1.mockClear();
+        onResize2.mockClear();
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+        expect(browserWindowInstance.on).not.toBeCalled();
+
+        browserWindowInstance.on.mockClear();
+        onResize1.mockClear();
+        onResize2.mockClear();
+        jest.runTimersToTime(2000);
+
+        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
+        expect(browserWindowInstance.getResizable()).toBe(true);
+        expect(browserWindowInstance.removeListener).toBeCalled();
+        expect(browserWindowInstance.removeListener.mock.calls[0][0]).toBe(
+          'resize'
+        );
+        expect(browserWindowInstance.on).toBeCalled();
+        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler2 = browserWindowInstance.on.mock.calls[0][1];
+        onResizeHandler2();
+        expect(onResize1).not.toBeCalled();
+        expect(onResize2).toBeCalledWith([200, 400]);
+      });
+    });
   });
 });
