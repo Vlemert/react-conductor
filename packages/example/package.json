@@ -10,7 +10,7 @@
     "@react-conductor/core": "0.1.0"
   },
   "scripts": {
-    "start": "webpack --config webpack.config.js && electron ./dist/bundle.js"
+    "start": "DEFAULT_EXAMPLE=index webpack --config webpack.config.js && electron ./dist/bundle.js"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

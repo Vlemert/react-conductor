@@ -1,6 +1,8 @@
+const exampleName = process.env.EXAMPLE || process.env.DEFAULT_EXAMPLE;
+
 module.exports = {
   target: 'electron-main',
-  entry: ['babel-polyfill', `${__dirname}/src/index.jsx`],
+  entry: ['babel-polyfill', `${__dirname}/src/${exampleName}.jsx`],
 
   output: {
     path: `${__dirname}/dist/`,
