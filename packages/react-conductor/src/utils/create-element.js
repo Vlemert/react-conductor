@@ -11,7 +11,8 @@ function createElement(type, props, root) {
     }
   };
 
-  return COMPONENTS[type]() || COMPONENTS.default();
+  const getInstance = COMPONENTS[type];
+  return (getInstance && getInstance()) || COMPONENTS.default();
 }
 
 export default createElement;
