@@ -1,52 +1,56 @@
 import React from 'react';
 import { app, BrowserWindow } from 'electron';
 
-import { Root } from '../components';
 import { Window } from '../index';
-import testRender from '../test-renderer';
+import render from '../render';
 
 jest.mock('electron');
 
+/**
+ * We should probably reorganize the tests. This no longer tests `Root`.
+ */
 describe('Root', () => {
   beforeEach(() => {
     BrowserWindow.mockReset();
+    app.once = jest.fn();
   });
 
-  test('is rendered as the root of the element tree', () => {
-    const Application = () => null;
-
-    const wrapper = testRender(<Application />);
-
-    expect(wrapper).toBeInstanceOf(Root);
+  afterEach(() => {
+    delete app.once;
   });
 
-  test('throws if something else than an App is appended to it', () => {
-    // Hide react error details from the console
-    const originalConsoleError = console.error;
-    console.error = jest.fn();
+  async function testRender(element) {
+    const renderPromise = render(element);
+    app.once.mock.calls[0][1]();
+    return renderPromise;
+  }
 
-    const Application = () => <Window />;
+  test('is rendered as the root of the element tree', async () => {
+    class Application extends React.Component {
+      render() {
+        return <Window />;
+      }
+    }
 
-    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
+    const renderResult = await testRender(<Application />);
 
-    // And restore console.error behaviour
-    console.error = originalConsoleError;
+    expect(renderResult).toBeInstanceOf(Application);
   });
 
-  test('throws when trying to render a string', () => {
+  test('throws when trying to render a string', async () => {
     // Hide react error details from the console
     const originalConsoleError = console.error;
     console.error = jest.fn();
 
     const Application = () => 'hello';
 
-    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
+    await expect(testRender(<Application />)).rejects.toMatchSnapshot();
 
     // And restore console.error behaviour
     console.error = originalConsoleError;
   });
 
-  test('throws when trying to render an invalid component', () => {
+  test('throws when trying to render an invalid component', async () => {
     // Hide react error details from the console
     const originalConsoleError = console.error;
     console.error = jest.fn();
@@ -54,7 +58,7 @@ describe('Root', () => {
     const Fake = 'fake';
     const Application = () => <Fake />;
 
-    expect(() => testRender(<Application />)).toThrowErrorMatchingSnapshot();
+    await expect(testRender(<Application />)).rejects.toMatchSnapshot();
 
     // And restore console.error behaviour
     console.error = originalConsoleError;

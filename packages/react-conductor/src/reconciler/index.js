@@ -1,4 +1,3 @@
-import emptyObject from 'fbjs/lib/emptyObject';
 const Reconciler = require('react-reconciler');
 
 import createElement from '../utils/create-element';
@@ -45,13 +44,11 @@ const ElectronRenderer = Reconciler({
   },
 
   getRootHostContext(rootContainerInstance) {
-    return {
-      launchInfo: rootContainerInstance.launchInfo
-    };
+    return null;
   },
 
-  getChildHostContext() {
-    return emptyObject;
+  getChildHostContext(parentHostContext, type, rootContainerInstance) {
+    return null;
   },
 
   shouldSetTextContent(type, props) {

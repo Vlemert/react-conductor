@@ -2,14 +2,11 @@ import App from './app';
 
 class Root {
   appendChild(child) {
-    // Not sure if we want to enforce this, but don't want to deal with the
-    // repercussions of not enforcing this right now. (windows being children
-    // of root etc)
-    if (!(child instanceof App)) {
-      throw new Error('Root element should be an App!');
+    // Do we need this? It's only used in tests, which probably means the tests
+    // aren't doing what they're supposed to do.
+    if (child instanceof App) {
+      this.appElement = child;
     }
-
-    this.appElement = child;
   }
 
   removeChild(child) {
