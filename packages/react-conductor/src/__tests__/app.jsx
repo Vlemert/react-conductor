@@ -18,7 +18,7 @@ describe('App', () => {
     const wrapper = testRender(<Application />);
 
     // Not sure what to assert here..
-    expect(wrapper.appElement.root.electronApp).toBe(app);
+    expect(wrapper.appElement.electronApp).toBe(app);
   });
 
   test('app events are registered, updated, and removed', () => {

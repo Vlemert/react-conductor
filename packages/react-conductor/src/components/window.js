@@ -4,8 +4,8 @@ import createEventManager from '../utils/create-event-manager';
 import Base from './base';
 
 class Window extends Base {
-  constructor(root, props) {
-    super(root, props);
+  constructor(props) {
+    super(props);
 
     this.childWindows = new Set();
 

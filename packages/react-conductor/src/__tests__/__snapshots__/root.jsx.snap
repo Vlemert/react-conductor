@@ -4,4 +4,4 @@ exports[`Root throws if something else than an App is appended to it 1`] = `"Roo
 
 exports[`Root throws when trying to render a string 1`] = `"TextElements are not supported! (do you have some text in your JSX?)"`;
 
-exports[`Root throws when trying to render a string 2`] = `"type 'fake' is not implemented (yet?)!"`;
+exports[`Root throws when trying to render an invalid component 1`] = `"type 'fake' is not implemented (yet?)!"`;

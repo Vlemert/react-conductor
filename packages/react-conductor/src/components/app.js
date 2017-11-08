@@ -1,15 +1,19 @@
+import { app } from 'electron';
+
 import createEventManager from '../utils/create-event-manager';
 import Base from './base';
 import Window from './window';
 import Menu from './menu';
 
 class App extends Base {
-  constructor(root, props) {
-    super(root, props);
+  constructor(props, rootContainerInstance) {
+    super(props);
 
+    this.electronApp = app;
+    this.launchInfo = rootContainerInstance.launchInfo;
     this.childWindows = new Set();
     this.childMenus = new Set();
-    this.eventManager = createEventManager(this.root.electronApp);
+    this.eventManager = createEventManager(this.electronApp);
   }
 
   appendChild(child) {
@@ -34,19 +38,19 @@ class App extends Base {
 
   getPublicInstance() {
     // TODO: think about whether we want to grant the user full access here
-    return this.root.electronApp;
+    return this.electronApp;
   }
 
   // This is mainly here to test whether I could get this to work
   // Might want to move all the app.dock stuff to a different element
   handleDockBounce(newValue) {
     if (newValue) {
-      this.dockBounceId = this.root.electronApp.dock.bounce(
+      this.dockBounceId = this.electronApp.dock.bounce(
         newValue === true ? undefined : newValue
       );
     } else {
       if (this.dockBounceId !== undefined) {
-        this.root.electronApp.dock.cancelBounce(this.dockBounceId);
+        this.electronApp.dock.cancelBounce(this.dockBounceId);
       }
     }
   }
@@ -56,7 +60,7 @@ class App extends Base {
   }
 
   handleOnReady(onReady) {
-    onReady(this.root.launchInfo);
+    onReady(this.launchInfo);
   }
 
   handleEvent(event) {

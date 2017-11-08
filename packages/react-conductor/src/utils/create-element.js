@@ -1,12 +1,12 @@
 import { Root, App, Window, Menu } from '../components/';
 
 // Creates an element with an element type, props and a root instance
-function createElement(type, props, root) {
+function createElement(type, props, rootContainerInstance, hostContext) {
   const COMPONENTS = {
-    ROOT: () => new Root(root, props),
-    APP: () => new App(root, props),
-    WINDOW: () => new Window(root, props),
-    MENU: () => new Menu(root, props),
+    ROOT: () => new Root(props),
+    APP: () => new App(props, rootContainerInstance),
+    WINDOW: () => new Window(props),
+    MENU: () => new Menu(props),
     default: () => {
       throw new Error(`type '${type}' is not implemented (yet?)!`);
     }

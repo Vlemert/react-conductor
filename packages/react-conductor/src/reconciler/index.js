@@ -1,7 +1,7 @@
 import emptyObject from 'fbjs/lib/emptyObject';
-import createElement from '../utils/create-element';
-
 const Reconciler = require('react-reconciler');
+
+import createElement from '../utils/create-element';
 
 const ElectronRenderer = Reconciler({
   // Add children
@@ -10,11 +10,11 @@ const ElectronRenderer = Reconciler({
   },
 
   // Here we are passing the internal instance (root instance i.e App)
-  createInstance(type, props, internalInstanceHandle) {
-    return createElement(type, props, internalInstanceHandle);
+  createInstance(type, props, rootContainerInstance, hostContext) {
+    return createElement(type, props, rootContainerInstance, hostContext);
   },
 
-  createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
+  createTextInstance(text, rootContainerInstance) {
     throw new Error(
       'TextElements are not supported! (do you have some text in your JSX?)'
     );
@@ -44,8 +44,10 @@ const ElectronRenderer = Reconciler({
     // noop
   },
 
-  getRootHostContext() {
-    return emptyObject;
+  getRootHostContext(rootContainerInstance) {
+    return {
+      launchInfo: rootContainerInstance.launchInfo
+    };
   },
 
   getChildHostContext() {

@@ -15,8 +15,8 @@ import Base from './base';
  * For now, we'll start with a basic implementation.
  */
 class Menu extends Base {
-  constructor(root, props) {
-    super(root, props);
+  constructor(props) {
+    super(props);
 
     this.menu = new ElectronMenu();
     this.eventManager = createEventManager(this.menu);
