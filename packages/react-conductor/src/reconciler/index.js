@@ -13,6 +13,14 @@ const ElectronRenderer = Reconciler({
    * functions of lower lying elements. We're not using it at the moment, but
    * in this function we could create the `rootHostContext` that gets passed
    * down. This function will only get called for the root.
+   *
+   * Note that the hostContext functions get called from the root to the leaves
+   * of the tree. This is important, because not every lifecycle step behaves
+   * that way.
+   *
+   * Furthermore, I'm unsure whether these functions can get called more than
+   * once in the lifecycle, so we should probably err on the safe side and keep
+   * them pure.
    */
   getRootHostContext(rootContainerInstance) {
     return null;
@@ -32,6 +40,10 @@ const ElectronRenderer = Reconciler({
   /**
    * When `ref` is used on one of our components, this is what will be returned.
    * We let the instance decide what should be returned.
+   *
+   * Note that this may get called on every update of the tree, if the user
+   * passes an anonymous function on the `ref` prop. Again, keeping this pure
+   * would probably be wise.
    */
   getPublicInstance(instance) {
     return instance.getPublicInstance();
@@ -43,6 +55,9 @@ const ElectronRenderer = Reconciler({
    * commitUpdate). This gives us a chance to 'save' some stuff that might get
    * lost during the commit. react-dom uses this to pause events, and save
    * selection information (which element has focus at the time of the commit).
+   *
+   * Doesn't have to be pure, prepare and reset will always be called before and
+   * after each commit.
    */
   prepareForCommit() {
     // We don't have any use for this right now
@@ -60,6 +75,12 @@ const ElectronRenderer = Reconciler({
    * This will be called for every element in the user's tree that is not a
    * custom component. In our case, `createElement` knows what to do with each
    * element type, and creates the instances for us.
+   *
+   * Note that this gets called from the leaves to the root of the tree, which
+   * means lower lying elements are instantiated first. Creating an element and
+   * appending it's children seems to happen in one sync step, though there are
+   * some comments in the react-reconciler code that suggest this might change
+   * in the future.
    */
   createInstance(type, props, rootContainerInstance, hostContext) {
     return createElement(type, props, rootContainerInstance, hostContext);
@@ -72,6 +93,11 @@ const ElectronRenderer = Reconciler({
    * every child can simply be appended.
    * (I would expect a root/container equivalent here, but that is down in the
    *  `mutation` section under `appendChildToContainer`)
+   *
+   * As stated above at `createInstance`, creating an instance and appending
+   * it's children seems to happen in one sync step. I'm unsure if that means
+   * we're safe to manipulate the child here (set it's parent for example), or
+   * whether we should do stuff like that through hostContext.
    */
   appendInitialChild(parentInstance, child) {
     parentInstance.appendChild(child);
