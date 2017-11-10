@@ -41,6 +41,7 @@ class MockBrowserWindow {
   getMovable() {
     return this.resizable;
   }
+  loadURL = jest.fn();
   on = jest.fn();
   removeListener = jest.fn();
 }
@@ -170,6 +171,36 @@ describe('Window', () => {
         show: true
       }
     ]);
+  });
+
+  test('handles `path` prop', () => {
+    class Application extends React.Component {
+      state = {
+        path: 'path/to/initial/file.html'
+      };
+
+      componentDidMount() {
+        setTimeout(() => {
+          this.setState({
+            path: 'path/to/other/file.html'
+          });
+        }, 2000);
+      }
+
+      render() {
+        return <Window path={this.state.path} />;
+      }
+    }
+
+    testRender(<Application />);
+    const mockWindow = mockWindows[0];
+    expect(mockWindow.loadURL).toBeCalledWith(
+      'file://path/to/initial/file.html'
+    );
+
+    jest.runTimersToTime(2000);
+
+    expect(mockWindow.loadURL).toBeCalledWith('file://path/to/other/file.html');
   });
 
   describe('correctly handles `defaultSize`, `size`, and `onResize`', () => {
