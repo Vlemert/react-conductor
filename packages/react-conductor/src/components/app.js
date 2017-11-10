@@ -6,8 +6,8 @@ import Window from './window';
 import Menu from './menu';
 
 class App extends Base {
-  constructor(props, rootContainerInstance) {
-    super(props);
+  constructor(type, props, rootContainerInstance, hostContext) {
+    super(type, props, rootContainerInstance, hostContext);
 
     this.electronApp = app;
     this.launchInfo = rootContainerInstance.launchInfo;

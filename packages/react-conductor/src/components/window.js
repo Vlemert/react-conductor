@@ -4,20 +4,77 @@ import createEventManager from '../utils/create-event-manager';
 import Base from './base';
 
 class Window extends Base {
-  constructor(props) {
-    super(props);
+  /**
+   * This generates the context that is passed to the direct children of an
+   * instance of this element class. Check the constructor to see how it's used
+   * here.
+   *
+   * TODO: we could also move this to the base class, as this is pretty generic.
+   */
+  static getHostContext() {
+    return {
+      // I'm not sure if using the constructor name is the smartest idea here,
+      // but it works
+      type: this.name
+    };
+  }
+
+  constructor(type, props, rootContainerInstance, hostContext) {
+    super(type, props, rootContainerInstance, hostContext);
 
     this.childWindows = new Set();
 
+    // When creating a BrowserWindow, we need to pass the parent into it's
+    // constructor. (setting it later works on Linux and macOS, but ironically
+    // not on Windows).
+    // Fiber will call all our constructors from the leaves to the root of the
+    // tree, which means that if a window has a parent, that order is opposite
+    // of what we want to do. (the child is created first)
+    // Our solution here is to defer initialization of a window if it has a
+    // window as the parent (current implementation is direct parent!). Then,
+    // when the window gets added to the parent, that parent window will be
+    // responsible for initializing it's children.
+    if (hostContext.type !== this.constructor.name) {
+      this.init(props);
+    } else {
+      // initFromParent is the init function, but with it's context (this) and
+      // first argument (props) already bound. That way, the parent only needs
+      // to supply it's BrowserWindow instance as the `parent` argument.
+      this.initFromParent = this.init.bind(this, props);
+    }
+  }
+
+  /**
+   * Creates a BrowserWindow instance given props and a parent. This function
+   * is either called from this instance's constructor, or from a parent
+   * instance if that parent is a window as well.
+   */
+  init(props, parent) {
     this.browserWindow = new BrowserWindow({
-      show: !!props.show
+      show: !!props.show,
+      parent
     });
     this.eventManager = createEventManager(this.browserWindow);
+
+    // If init was called from the constructor, children are not yet appended
+    // and this will do nothing. Therefore `appendChild` will also do a check,
+    // and initialize the child if `init` was already called.
+    this.childWindows.forEach(child =>
+      child.initFromParent(this.browserWindow)
+    );
   }
 
   appendChild(child) {
     if (child instanceof Window) {
       this.childWindows.add(child);
+
+      // If this element's BrowserWindow is already initialized, we immediately
+      // initialize the child here. It could be that this element is inside of
+      // another window as well, which means that `init` is not yet called and
+      // we cannot initialize the children yet.
+      if (this.browserWindow) {
+        child.initFromParent(this.browserWindow);
+      }
     }
   }
 

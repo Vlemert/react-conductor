@@ -99,18 +99,19 @@ describe('Window', () => {
   test('can be nested', () => {
     const Application = () => (
       <Window>
-        <Window />
+        <Window>
+          <Window />
+        </Window>
       </Window>
     );
 
     testRender(<Application />);
 
-    expect(mockWindows.length).toBe(2);
+    expect(mockWindows.length).toBe(3);
 
-    // TODO: we need to test here that one window is the child of the other.
-    // As we aren't using the childWindow functionality right now, there is
-    // no way to test it, it's purely internal to the window element class.
-    // Therefore, testing it will have to wait until it's used.
+    expect(mockWindows[0].args[0].parent).toBeUndefined();
+    expect(mockWindows[1].args[0].parent).toBe(mockWindows[0]);
+    expect(mockWindows[2].args[0].parent).toBe(mockWindows[1]);
   });
 
   describe('registers child windows correctly', () => {

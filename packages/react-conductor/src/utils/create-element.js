@@ -1,19 +1,13 @@
-import { Root, App, Window, Menu } from '../components/';
+import getElementClass from './get-element-class';
 
+/**
+ * Creates and returns an instance of an element based on a given type.
+ */
 // Creates an element with an element type, props and a root instance
 function createElement(type, props, rootContainerInstance, hostContext) {
-  const COMPONENTS = {
-    ROOT: () => new Root(props),
-    APP: () => new App(props, rootContainerInstance),
-    WINDOW: () => new Window(props),
-    MENU: () => new Menu(props),
-    default: () => {
-      throw new Error(`type '${type}' is not implemented (yet?)!`);
-    }
-  };
+  const ElementClass = getElementClass(type);
 
-  const getInstance = COMPONENTS[type];
-  return (getInstance && getInstance()) || COMPONENTS.default();
+  return new ElementClass(type, props, rootContainerInstance, hostContext);
 }
 
 export default createElement;

@@ -1,11 +1,16 @@
 class Base {
-  constructor(props) {
+  constructor(type, props, rootContainerInstance, hostContext) {
+    this.type = type;
     this.props = props;
+    this.rootContainerInstance = rootContainerInstance;
+    this.hostContext = hostContext;
   }
 
   appendChild(child) {}
 
   removeChild(child) {}
+
+  static getHostContext() {}
 
   getPublicInstance() {
     return this;

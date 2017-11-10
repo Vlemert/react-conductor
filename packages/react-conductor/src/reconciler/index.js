@@ -1,5 +1,6 @@
 const Reconciler = require('react-reconciler');
 
+import getElementClass from '../utils/get-element-class';
 import createElement from '../utils/create-element';
 
 /**
@@ -23,18 +24,26 @@ const ElectronRenderer = Reconciler({
    * them pure.
    */
   getRootHostContext(rootContainerInstance) {
-    return null;
+    return {};
   },
 
   /**
    * This function will get called for every node in the tree that is not the
    * root. We can expand on a parent's hostContext here, and pass an extended
    * object further down.
-   * We could probably use this to keep track of windows in windows, or whether
-   * a menu lives in a window.
+   *
+   * We let the element classes decide for themselves what to return here. Note
+   * that at this point we don't have an instance of the element yet, so all we
+   * can do is call a static function on the class.
+   *
+   * Window implements getHostContext for example so child windows know they're
+   * being rendered in a window.
    */
   getChildHostContext(parentHostContext, type, rootContainerInstance) {
-    return null;
+    return {
+      hostContext: parentHostContext,
+      ...getElementClass(type).getHostContext()
+    };
   },
 
   /**
