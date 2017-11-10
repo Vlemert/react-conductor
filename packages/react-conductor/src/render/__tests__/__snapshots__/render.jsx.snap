@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render throws when trying to render a string 1`] = `[Error: TextElements are not supported! (do you have some text in your JSX?)]`;
+
+exports[`render throws when trying to render an invalid component 1`] = `[Error: type 'fake' is not implemented (yet?)!]`;
