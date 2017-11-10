@@ -3,6 +3,10 @@ class Base {
     this.props = props;
   }
 
+  appendChild(child) {}
+
+  removeChild(child) {}
+
   getPublicInstance() {
     return this;
   }

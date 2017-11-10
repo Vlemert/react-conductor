@@ -1,98 +1,118 @@
 import React, { Component } from 'react';
-import { BrowserWindow } from 'electron';
+import { app, BrowserWindow } from 'electron';
 
-import { App, Window } from '../index';
-import testRender from '../test-renderer';
+import { Window } from '../index';
+import { render } from '../index';
 
 jest.mock('electron');
 jest.useFakeTimers();
 
+async function testRender(element, launchInfo) {
+  const renderPromise = render(element);
+  app.once.mock.calls[0][1](launchInfo);
+  return renderPromise;
+}
+
+class MockBrowserWindow {
+  constructor(...args) {
+    this.args = args;
+  }
+  setSize(...size) {
+    this.size = size;
+  }
+  getSize() {
+    return this.size;
+  }
+  setResizable(resizable) {
+    this.resizable = resizable;
+  }
+  getResizable() {
+    return this.resizable;
+  }
+  setPosition(...position) {
+    this.position = position;
+  }
+  getPosition() {
+    return this.position;
+  }
+  setMovable(resizable) {
+    this.resizable = resizable;
+  }
+  getMovable() {
+    return this.resizable;
+  }
+  on = jest.fn();
+  removeListener = jest.fn();
+}
+
 describe('Window', () => {
+  let mockWindows = [];
+
   beforeEach(() => {
+    mockWindows = [];
     BrowserWindow.mockReset();
+    BrowserWindow.mockImplementation((...args) => {
+      const newWindow = new MockBrowserWindow(...args);
+      mockWindows.push(newWindow);
+      return newWindow;
+    });
+    app.once = jest.fn();
   });
 
   afterEach(() => {
     jest.clearAllTimers();
+    delete app.once;
   });
 
-  test('can render inside App', () => {
-    const Application = () => (
-      <App>
-        <Window />
-      </App>
-    );
+  test('renders', () => {
+    const Application = () => <Window />;
 
-    const wrapper = testRender(<Application />);
+    testRender(<Application />);
 
-    expect(wrapper.appElement.childWindows.size).toBe(1);
-    const childIterator = wrapper.appElement.childWindows.values();
-    expect(childIterator.next().value.browserWindow).toBeInstanceOf(
-      BrowserWindow
-    );
+    expect(mockWindows.length).toBe(1);
   });
 
-  test('can render more than once in App', () => {
-    const Application = () => (
-      <App>
-        <Window key="1" />
-        <Window key="2" />
-      </App>
-    );
+  test('can render more than once', () => {
+    const Application = () => [<Window key="1" />, <Window key="2" />];
 
-    const wrapper = testRender(<Application />);
+    testRender(<Application />);
 
-    expect(wrapper.appElement.childWindows.size).toBe(2);
-    const childIterator = wrapper.appElement.childWindows.values();
-    expect(childIterator.next().value.browserWindow).toBeInstanceOf(
-      BrowserWindow
-    );
-    expect(childIterator.next().value.browserWindow).toBeInstanceOf(
-      BrowserWindow
-    );
+    expect(mockWindows.length).toBe(2);
   });
 
   test('returns a `BrowserWindow` as ref', () => {
     let windowRef;
     const Application = () => (
-      <App>
-        <Window
-          ref={ref => {
-            windowRef = ref;
-          }}
-        />
-      </App>
+      <Window
+        ref={ref => {
+          windowRef = ref;
+        }}
+      />
     );
 
     testRender(<Application />);
 
-    expect(windowRef).toBeInstanceOf(BrowserWindow);
+    expect(windowRef).toBe(mockWindows[0]);
   });
 
   test('can be nested', () => {
     const Application = () => (
-      <App>
-        <Window>
-          <Window />
-        </Window>
-      </App>
+      <Window>
+        <Window />
+      </Window>
     );
 
-    const wrapper = testRender(<Application />);
+    testRender(<Application />);
 
-    expect(wrapper.appElement.childWindows.size).toBe(1);
-    const appChildIterator = wrapper.appElement.childWindows.values();
-    const appChild = appChildIterator.next().value;
-    expect(appChild.browserWindow).toBeInstanceOf(BrowserWindow);
+    expect(mockWindows.length).toBe(2);
 
-    expect(appChild.childWindows.size).toBe(1);
-    const windowChildIterator = appChild.childWindows.values();
-    const windowChild = windowChildIterator.next().value;
-    expect(windowChild.browserWindow).toBeInstanceOf(BrowserWindow);
+    // TODO: we need to test here that one window is the child of the other.
+    // As we aren't using the childWindow functionality right now, there is
+    // no way to test it, it's purely internal to the window element class.
+    // Therefore, testing it will have to wait until it's used.
   });
 
   describe('registers child windows correctly', () => {
-    let wrapper;
     beforeEach(() => {
       class Application extends React.Component {
         state = {
@@ -108,165 +128,83 @@ describe('Window', () => {
         }
 
         render() {
-          return (
-            <App>
-              <Window>{this.state.childWindow && <Window />}</Window>
-            </App>
-          );
+          return <Window>{this.state.childWindow && <Window />}</Window>;
         }
       }
 
-      wrapper = testRender(<Application />);
+      testRender(<Application />);
     });
 
     test('when adding', () => {
-      const appChildIterator = wrapper.appElement.childWindows.values();
-      const appChild = appChildIterator.next().value;
-      expect(appChild.childWindows.size).toBe(1);
+      // Again, there is currently no way to test this, as it's not visible
+      // from the outside that the windows are nested.
     });
 
     test('when removing', () => {
       jest.runTimersToTime(2000);
-      const appChildIterator = wrapper.appElement.childWindows.values();
-      const appChild = appChildIterator.next().value;
-      expect(appChild.childWindows.size).toBe(0);
-    });
-  });
+      // Again, there is currently no way to test this, as it's not visible
+      // from the outside that the windows are nested.
 
-  describe('does nothing with non-window children', () => {
-    let wrapper;
-    beforeEach(() => {
-      class Application extends React.Component {
-        state = {
-          child: true
-        };
-
-        componentDidMount() {
-          setTimeout(() => {
-            this.setState({
-              child: false
-            });
-          }, 2000);
-        }
-
-        render() {
-          return (
-            <App>
-              <Window>{this.state.child && <App />}</Window>
-            </App>
-          );
-        }
-      }
-
-      wrapper = testRender(<Application />);
-    });
-
-    test('when adding', () => {
-      const appChildIterator = wrapper.appElement.childWindows.values();
-      const appChild = appChildIterator.next().value;
-      expect(appChild.childWindows.size).toBe(0);
-    });
-
-    test('when removing', () => {
-      jest.runTimersToTime(2000);
-      const appChildIterator = wrapper.appElement.childWindows.values();
-      const appChild = appChildIterator.next().value;
-      expect(appChild.childWindows.size).toBe(0);
+      // TODO: we also need to test here that removed windows are properly
+      // destroyed / closed. As we currently do not do that, we cannot test it.
     });
   });
 
   test('is hidden by default', () => {
-    const Application = () => (
-      <App>
-        <Window />
-      </App>
-    );
+    const Application = () => <Window />;
 
     testRender(<Application />);
-    expect(BrowserWindow.mock.calls[0][0].show).toBe(false);
+    expect(mockWindows[0].args).toEqual([
+      {
+        show: false
+      }
+    ]);
   });
 
   test('can be shown', async () => {
-    const Application = () => (
-      <App>
-        <Window show />
-      </App>
-    );
+    const Application = () => <Window show />;
 
     testRender(<Application />);
-    expect(BrowserWindow.mock.calls[0][0].show).toBe(true);
+    expect(mockWindows[0].args).toEqual([
+      {
+        show: true
+      }
+    ]);
   });
 
   describe('correctly handles `defaultSize`, `size`, and `onResize`', () => {
-    class BrowserWindowMock {
-      setSize(...size) {
-        this.size = size;
-      }
-      getSize() {
-        return this.size;
-      }
-      setResizable(resizable) {
-        this.resizable = resizable;
-      }
-      getResizable() {
-        return this.resizable;
-      }
-      on = jest.fn();
-      removeListener = jest.fn();
-    }
-
-    let browserWindowInstance;
-
-    beforeEach(() => {
-      BrowserWindow.mockImplementation(() => {
-        browserWindowInstance = new BrowserWindowMock();
-        return browserWindowInstance;
-      });
-    });
-
-    afterEach(() => {
-      BrowserWindow.mockClear();
-    });
-
     describe('on mount', () => {
       test('if only `defaultSize` is set', () => {
-        const Application = () => (
-          <App>
-            <Window defaultSize={[100, 200]} />
-          </App>
-        );
+        const Application = () => <Window defaultSize={[100, 200]} />;
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(true);
       });
 
       test('if only `size` is set', () => {
-        const Application = () => (
-          <App>
-            <Window size={[100, 200]} />
-          </App>
-        );
+        const Application = () => <Window size={[100, 200]} />;
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(false);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(false);
       });
 
       test('if `size` and `onResize` are set', () => {
         const onResize = jest.fn();
         const Application = () => (
-          <App>
-            <Window size={[100, 200]} onResize={onResize} />
-          </App>
+          <Window size={[100, 200]} onResize={onResize} />
         );
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
-        const onResizeHandler = browserWindowInstance.on.mock.calls[0][1];
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(true);
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler = mockWindow.on.mock.calls[0][1];
         onResizeHandler();
         expect(onResize).toBeCalledWith([100, 200]);
       });
@@ -288,24 +226,21 @@ describe('Window', () => {
           }
 
           render() {
-            return (
-              <App>
-                <Window defaultSize={this.state.defaultSize} />
-              </App>
-            );
+            return <Window defaultSize={this.state.defaultSize} />;
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(true);
 
         jest.runTimersToTime(2000);
 
         // TODO: we probably shouldn't allow this, update the test once we
         // update the implementation
-        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
+        expect(mockWindow.getSize()).toEqual([200, 400]);
+        expect(mockWindow.getResizable()).toBe(true);
       });
 
       test('if only `size` is set', () => {
@@ -323,22 +258,19 @@ describe('Window', () => {
           }
 
           render() {
-            return (
-              <App>
-                <Window size={this.state.size} />
-              </App>
-            );
+            return <Window size={this.state.size} />;
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(false);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(false);
 
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
-        expect(browserWindowInstance.getResizable()).toBe(false);
+        expect(mockWindow.getSize()).toEqual([200, 400]);
+        expect(mockWindow.getResizable()).toBe(false);
       });
 
       test('if `size` and `onResize` are set', () => {
@@ -367,45 +299,42 @@ describe('Window', () => {
 
           render() {
             return (
-              <App>
-                <Window size={this.state.size} onResize={this.state.onResize} />
-              </App>
+              <Window size={this.state.size} onResize={this.state.onResize} />
             );
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getSize()).toEqual([100, 200]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
-        const onResizeHandler1 = browserWindowInstance.on.mock.calls[0][1];
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getSize()).toEqual([100, 200]);
+        expect(mockWindow.getResizable()).toBe(true);
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler1 = mockWindow.on.mock.calls[0][1];
         onResizeHandler1();
         expect(onResize1).toBeCalledWith([100, 200]);
 
-        browserWindowInstance.on.mockClear();
+        mockWindow.on.mockClear();
         onResize1.mockClear();
         onResize2.mockClear();
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
-        expect(browserWindowInstance.on).not.toBeCalled();
+        expect(mockWindow.getSize()).toEqual([200, 400]);
+        expect(mockWindow.getResizable()).toBe(true);
+        expect(mockWindow.on).not.toBeCalled();
 
-        browserWindowInstance.on.mockClear();
+        mockWindow.on.mockClear();
         onResize1.mockClear();
         onResize2.mockClear();
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getSize()).toEqual([200, 400]);
-        expect(browserWindowInstance.getResizable()).toBe(true);
-        expect(browserWindowInstance.removeListener).toBeCalled();
-        expect(browserWindowInstance.removeListener.mock.calls[0][0]).toBe(
-          'resize'
-        );
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('resize');
-        const onResizeHandler2 = browserWindowInstance.on.mock.calls[0][1];
+        expect(mockWindow.getSize()).toEqual([200, 400]);
+        expect(mockWindow.getResizable()).toBe(true);
+        expect(mockWindow.removeListener).toBeCalled();
+        expect(mockWindow.removeListener.mock.calls[0][0]).toBe('resize');
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('resize');
+        const onResizeHandler2 = mockWindow.on.mock.calls[0][1];
         onResizeHandler2();
         expect(onResize1).not.toBeCalled();
         expect(onResize2).toBeCalledWith([200, 400]);
@@ -414,75 +343,38 @@ describe('Window', () => {
   });
 
   describe('correctly handles `defaultPosition`, `position`, and `onMove`', () => {
-    class BrowserWindowMock {
-      setPosition(...position) {
-        this.position = position;
-      }
-      getPosition() {
-        return this.position;
-      }
-      setMovable(resizable) {
-        this.resizable = resizable;
-      }
-      getMovable() {
-        return this.resizable;
-      }
-      on = jest.fn();
-      removeListener = jest.fn();
-    }
-
-    let browserWindowInstance;
-
-    beforeEach(() => {
-      BrowserWindow.mockImplementation(() => {
-        browserWindowInstance = new BrowserWindowMock();
-        return browserWindowInstance;
-      });
-    });
-
-    afterEach(() => {
-      BrowserWindow.mockClear();
-    });
-
     describe('on mount', () => {
       test('if only `defaultPosition` is set', () => {
-        const Application = () => (
-          <App>
-            <Window defaultPosition={[100, 200]} />
-          </App>
-        );
+        const Application = () => <Window defaultPosition={[100, 200]} />;
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(true);
       });
 
       test('if only `position` is set', () => {
-        const Application = () => (
-          <App>
-            <Window position={[100, 200]} />
-          </App>
-        );
+        const Application = () => <Window position={[100, 200]} />;
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(false);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(false);
       });
 
       test('if `position` and `onMove` are set', () => {
         const onMove = jest.fn();
         const Application = () => (
-          <App>
-            <Window position={[100, 200]} onMove={onMove} />
-          </App>
+          <Window position={[100, 200]} onMove={onMove} />
         );
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
-        const onMoveHandler = browserWindowInstance.on.mock.calls[0][1];
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(true);
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler = mockWindow.on.mock.calls[0][1];
         onMoveHandler();
         expect(onMove).toBeCalledWith([100, 200]);
       });
@@ -504,24 +396,21 @@ describe('Window', () => {
           }
 
           render() {
-            return (
-              <App>
-                <Window defaultPosition={this.state.defaultPosition} />
-              </App>
-            );
+            return <Window defaultPosition={this.state.defaultPosition} />;
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(true);
 
         jest.runTimersToTime(2000);
 
         // TODO: we probably shouldn't allow this, update the test once we
         // update the implementation
-        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
+        expect(mockWindow.getPosition()).toEqual([200, 400]);
+        expect(mockWindow.getMovable()).toBe(true);
       });
 
       test('if only `position` is set', () => {
@@ -539,22 +428,19 @@ describe('Window', () => {
           }
 
           render() {
-            return (
-              <App>
-                <Window position={this.state.position} />
-              </App>
-            );
+            return <Window position={this.state.position} />;
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(false);
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(false);
 
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
-        expect(browserWindowInstance.getMovable()).toBe(false);
+        expect(mockWindow.getPosition()).toEqual([200, 400]);
+        expect(mockWindow.getMovable()).toBe(false);
       });
 
       test('if `position` and `onMove` are set', () => {
@@ -583,48 +469,45 @@ describe('Window', () => {
 
           render() {
             return (
-              <App>
-                <Window
-                  position={this.state.position}
-                  onMove={this.state.onMove}
-                />
-              </App>
+              <Window
+                position={this.state.position}
+                onMove={this.state.onMove}
+              />
             );
           }
         }
 
         testRender(<Application />);
-        expect(browserWindowInstance.getPosition()).toEqual([100, 200]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
-        const onMoveHandler1 = browserWindowInstance.on.mock.calls[0][1];
+        const mockWindow = mockWindows[0];
+        expect(mockWindow.getPosition()).toEqual([100, 200]);
+        expect(mockWindow.getMovable()).toBe(true);
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler1 = mockWindow.on.mock.calls[0][1];
         onMoveHandler1();
         expect(onMove1).toBeCalledWith([100, 200]);
 
-        browserWindowInstance.on.mockClear();
+        mockWindow.on.mockClear();
         onMove1.mockClear();
         onMove2.mockClear();
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
-        expect(browserWindowInstance.on).not.toBeCalled();
+        expect(mockWindow.getPosition()).toEqual([200, 400]);
+        expect(mockWindow.getMovable()).toBe(true);
+        expect(mockWindow.on).not.toBeCalled();
 
-        browserWindowInstance.on.mockClear();
+        mockWindow.on.mockClear();
         onMove1.mockClear();
         onMove2.mockClear();
         jest.runTimersToTime(2000);
 
-        expect(browserWindowInstance.getPosition()).toEqual([200, 400]);
-        expect(browserWindowInstance.getMovable()).toBe(true);
-        expect(browserWindowInstance.removeListener).toBeCalled();
-        expect(browserWindowInstance.removeListener.mock.calls[0][0]).toBe(
-          'move'
-        );
-        expect(browserWindowInstance.on).toBeCalled();
-        expect(browserWindowInstance.on.mock.calls[0][0]).toBe('move');
-        const onMoveHandler2 = browserWindowInstance.on.mock.calls[0][1];
+        expect(mockWindow.getPosition()).toEqual([200, 400]);
+        expect(mockWindow.getMovable()).toBe(true);
+        expect(mockWindow.removeListener).toBeCalled();
+        expect(mockWindow.removeListener.mock.calls[0][0]).toBe('move');
+        expect(mockWindow.on).toBeCalled();
+        expect(mockWindow.on.mock.calls[0][0]).toBe('move');
+        const onMoveHandler2 = mockWindow.on.mock.calls[0][1];
         onMoveHandler2();
         expect(onMove1).not.toBeCalled();
         expect(onMove2).toBeCalledWith([200, 400]);

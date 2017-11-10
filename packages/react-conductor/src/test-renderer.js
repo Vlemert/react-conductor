@@ -2,13 +2,10 @@ import createElement from './utils/create-element';
 import ElectronRenderer from './reconciler';
 
 /**
- * TODO: the test renderer shouldn't actually render to Electron elements. It's
- * supposed to help future users test their applications, not help testing this
- * library.
+ * Not sure if we need this any longer. It might be a nice starting point for
+ * an actual test renderer in the future.
  *
- * We'll need to switch all our tests to using the actual renderer, and change
- * this one to the way it's done in React (and move it to a separate package
- * probably)
+ * Never use this in a test within react-conductor!
  */
 function render(element, launchInfo) {
   const container = createElement('ROOT');

@@ -1,17 +1,7 @@
-import App from './app';
-
 class Root {
-  appendChild(child) {
-    // Do we need this? It's only used in tests, which probably means the tests
-    // aren't doing what they're supposed to do.
-    if (child instanceof App) {
-      this.appElement = child;
-    }
-  }
+  appendChild(child) {}
 
-  removeChild(child) {
-    this.appElement = null;
-  }
+  removeChild(child) {}
 }
 
 export default Root;

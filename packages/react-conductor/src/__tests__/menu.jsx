@@ -1,32 +1,63 @@
 import React, { Component } from 'react';
-import { Menu as ElectronMenu } from 'electron';
+import { app, Menu as ElectronMenu } from 'electron';
 
-import { App, Menu } from '../index';
-import testRender from '../test-renderer';
+import { Menu } from '../index';
+import { render } from '../index';
 
 jest.mock('electron');
 jest.useFakeTimers();
 
+async function testRender(element, launchInfo) {
+  const renderPromise = render(element);
+  app.once.mock.calls[0][1](launchInfo);
+  return renderPromise;
+}
+
+class MockMenu {
+  constructor(...args) {
+    this.args = args;
+  }
+}
+
 describe('Menu', () => {
+  let mockMenus = [];
+
   beforeEach(() => {
+    mockMenus = [];
     ElectronMenu.mockReset();
+    ElectronMenu.mockImplementation((...args) => {
+      const newMenu = new MockMenu(...args);
+      mockMenus.push(newMenu);
+      return newMenu;
+    });
+    app.once = jest.fn();
   });
 
   afterEach(() => {
     jest.clearAllTimers();
+    delete app.once;
   });
 
-  test('can render inside App', () => {
+  test('can render', () => {
+    const Application = () => <Menu />;
+
+    testRender(<Application />);
+
+    expect(mockMenus.length).toBe(1);
+  });
+
+  test('returns a `Menu` as ref', () => {
+    let menuRef;
     const Application = () => (
-      <App>
-        <Menu />
-      </App>
+      <Menu
+        ref={ref => {
+          menuRef = ref;
+        }}
+      />
     );
 
-    const wrapper = testRender(<Application />);
+    testRender(<Application />);
 
-    expect(wrapper.appElement.childMenus.size).toBe(1);
-    const childIterator = wrapper.appElement.childMenus.values();
-    expect(childIterator.next().value.menu).toBeInstanceOf(ElectronMenu);
+    expect(menuRef).toBe(mockMenus[0]);
   });
 });

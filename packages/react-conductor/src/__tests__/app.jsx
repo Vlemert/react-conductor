@@ -1,24 +1,27 @@
 import React from 'react';
 import { app } from 'electron';
 
-import { App, Window } from '../index';
-import testRender from '../test-renderer';
+import { App } from '../index';
+import { render } from '../index';
 
 jest.mock('electron');
 jest.useFakeTimers();
 
+// TODO: this is the same in three test files already
+async function testRender(element, launchInfo) {
+  const renderPromise = render(element);
+  app.once.mock.calls[0][1](launchInfo);
+  return renderPromise;
+}
+
 describe('App', () => {
-  afterEach(() => {
-    jest.clearAllTimers();
+  beforeEach(() => {
+    app.once = jest.fn();
   });
 
-  test('can render', () => {
-    const Application = () => <App />;
-
-    const wrapper = testRender(<Application />);
-
-    // Not sure what to assert here..
-    expect(wrapper.appElement.electronApp).toBe(app);
+  afterEach(() => {
+    jest.clearAllTimers();
+    delete app.once;
   });
 
   test('app events are registered, updated, and removed', () => {
@@ -106,74 +109,6 @@ describe('App', () => {
     testRender(<Application />, launchInfo);
 
     expect(onReady).toBeCalledWith(launchInfo);
-  });
-
-  describe('registers child windows correctly', () => {
-    let wrapper;
-    beforeEach(() => {
-      class Application extends React.Component {
-        state = {
-          childWindow: true
-        };
-
-        componentDidMount() {
-          setTimeout(() => {
-            this.setState({
-              childWindow: false
-            });
-          }, 2000);
-        }
-
-        render() {
-          return <App>{this.state.childWindow && <Window />}</App>;
-        }
-      }
-
-      wrapper = testRender(<Application />);
-    });
-
-    test('when adding', () => {
-      expect(wrapper.appElement.childWindows.size).toBe(1);
-    });
-
-    test('when removing', () => {
-      jest.runTimersToTime(2000);
-      expect(wrapper.appElement.childWindows.size).toBe(0);
-    });
-  });
-
-  describe('does nothing with non-window children', () => {
-    let wrapper;
-    beforeEach(() => {
-      class Application extends React.Component {
-        state = {
-          child: true
-        };
-
-        componentDidMount() {
-          setTimeout(() => {
-            this.setState({
-              child: false
-            });
-          }, 2000);
-        }
-
-        render() {
-          return <App>{this.state.child && <App />}</App>;
-        }
-      }
-
-      wrapper = testRender(<Application />);
-    });
-
-    test('when adding', () => {
-      expect(wrapper.appElement.childWindows.size).toBe(0);
-    });
-
-    test('when removing', () => {
-      jest.runTimersToTime(2000);
-      expect(wrapper.appElement.childWindows.size).toBe(0);
-    });
   });
 
   describe('correctly handles dockBounce', () => {

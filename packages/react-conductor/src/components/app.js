@@ -11,29 +11,7 @@ class App extends Base {
 
     this.electronApp = app;
     this.launchInfo = rootContainerInstance.launchInfo;
-    this.childWindows = new Set();
-    this.childMenus = new Set();
     this.eventManager = createEventManager(this.electronApp);
-  }
-
-  appendChild(child) {
-    if (child instanceof Window) {
-      this.childWindows.add(child);
-    }
-
-    if (child instanceof Menu) {
-      this.childMenus.add(child);
-    }
-  }
-
-  removeChild(child) {
-    if (child instanceof Window) {
-      this.childWindows.delete(child);
-    }
-
-    if (child instanceof Menu) {
-      this.childMenus.delete(child);
-    }
   }
 
   getPublicInstance() {
