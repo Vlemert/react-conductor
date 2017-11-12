@@ -229,6 +229,31 @@ class Window extends Base {
       path: this.handlePath.bind(this)
     };
   }
+
+  commitMount(props) {
+    super.commitMount(props);
+
+    // We want to know when the BrowserWindow was closed. Of course this breaks
+    // once we allow users to register on events like we do in App.
+    this.eventManager('closed', () => {
+      this.closed = true;
+    });
+  }
+
+  commitUpdate(updatePayload, oldProps, newProps) {
+    // Stop handling updates if the BrowserWindow closes. This prevents errors
+    // further down the line. We'll need to come up with a better strategy for
+    // handling when windows are open/closed, not sure how to solve that right
+    // now:
+    // Normally, you'd remove something by no longer rendering it in the
+    // component tree. The issue here is that the page rendered in the window
+    // might want to cancel / delay the close for some reason.
+    if (this.closed) {
+      return;
+    }
+
+    super.commitUpdate(updatePayload, oldProps, newProps);
+  }
 }
 
 export default Window;
