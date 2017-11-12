@@ -50,10 +50,22 @@ class Window extends Base {
    * instance if that parent is a window as well.
    */
   init(props, parent) {
-    this.browserWindow = new BrowserWindow({
+    const options = {
       show: !!props.show,
       parent
-    });
+    };
+
+    // For some reason, letting `handlePosition` set the position on mount
+    // doesn't work correctly, with the window ending up in the wrong location.
+    // (seen it happen on macOS, with the window ending up outside of the screen
+    // in the top-left)
+    const position = props.defaultPosition || props.position;
+    if (position) {
+      options.x = position[0];
+      options.y = position[1];
+    }
+
+    this.browserWindow = new BrowserWindow(options);
     this.eventManager = createEventManager(this.browserWindow);
 
     // If init was called from the constructor, children are not yet appended
