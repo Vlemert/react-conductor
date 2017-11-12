@@ -7,9 +7,9 @@
   "license": "MIT",
   "scripts": {
     "test": "(cd ./packages/react-conductor && yarn test)",
-    "build": "(cd ./packages/react-conductor && yarn build)",
     "test:watch": "(cd ./packages/react-conductor && yarn test:watch)",
-    "start": "(cd ./packages/example && yarn start)"
+    "build": "(cd ./packages/react-conductor && yarn build)",
+    "start": "yarn build && (cd ./packages/example && yarn start)"
   },
   "devDependencies": {
     "prettier": "^1.7.4"
