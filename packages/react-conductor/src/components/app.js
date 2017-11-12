@@ -2,8 +2,6 @@ import { app } from 'electron';
 
 import createEventManager from '../utils/create-event-manager';
 import Base from './base';
-import Window from './window';
-import Menu from './menu';
 
 class App extends Base {
   constructor(type, props, rootContainerInstance, hostContext) {
