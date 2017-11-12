@@ -34,7 +34,7 @@ class Window extends Base {
     // window as the parent (current implementation is direct parent!). Then,
     // when the window gets added to the parent, that parent window will be
     // responsible for initializing it's children.
-    if (hostContext.type !== this.constructor.name) {
+    if (hostContext.type !== Window.name) {
       this.init(props);
     } else {
       // initFromParent is the init function, but with it's context (this) and
