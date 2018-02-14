@@ -6,8 +6,8 @@
   "author": "Niels Vleeming",
   "license": "MIT",
   "dependencies": {
-    "react": "^16.0.0",
-    "@react-conductor/core": "0.1.0"
+    "@react-conductor/core": "0.1.0",
+    "react": "^16.0.0"
   },
   "scripts": {
     "start": "DEFAULT_EXAMPLE=index webpack --config webpack.config.js && electron ./dist/bundle.js"
