@@ -175,10 +175,12 @@ const ElectronRenderer = Reconciler({
 
     removeChild(parentInstance, child) {
       parentInstance.removeChild(child);
+      child.unmount();
     },
 
     removeChildFromContainer(container, child) {
       container.removeChild(child);
+      child.unmount();
     }
   }
 });

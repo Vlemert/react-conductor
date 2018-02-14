@@ -96,6 +96,10 @@ class Window extends Base {
     }
   }
 
+  unmount() {
+    this.browserWindow.destroy();
+  }
+
   getPublicInstance() {
     // TODO: think about whether we want to grant the user full access here
     return this.browserWindow;
@@ -245,10 +249,11 @@ class Window extends Base {
   commitMount(props) {
     super.commitMount(props);
 
-    // We want to know when the BrowserWindow was closed. Of course this breaks
-    // once we allow users to register on events like we do in App.
+    // We want to know when the BrowserWindow was closed, therefore we cannot
+    // place this handler in propEvents
     this.eventManager('closed', () => {
       this.closed = true;
+      props.onClosed && props.onClosed();
     });
   }
 
@@ -260,11 +265,25 @@ class Window extends Base {
     // Normally, you'd remove something by no longer rendering it in the
     // component tree. The issue here is that the page rendered in the window
     // might want to cancel / delay the close for some reason.
+    // Update: for now the decision is to destroy the BrowserWindow when it
+    // unmounts. This is quite harsh, but if the unmount is already done, we
+    // cannot allow the renderer process to prevent the window from actually
+    // closing. In practice, the window should only be unmounted in response to
+    // the onClosed event. This does mean that we need a decent solution to
+    // request the window to close from the outside, which can for the moment be
+    // done through the public instance (ref)
     if (this.closed) {
       return;
     }
 
     super.commitUpdate(updatePayload, oldProps, newProps);
+
+    if (oldProps.onClosed !== newProps.onClosed) {
+      this.eventManager('closed', () => {
+        this.closed = true;
+        newProps.onClosed && newProps.onClosed();
+      });
+    }
   }
 }
 

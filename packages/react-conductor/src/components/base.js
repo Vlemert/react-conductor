@@ -10,6 +10,8 @@ class Base {
 
   removeChild(child) {}
 
+  unmount() {}
+
   static getHostContext() {}
 
   getPublicInstance() {

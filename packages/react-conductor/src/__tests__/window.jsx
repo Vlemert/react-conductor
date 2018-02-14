@@ -44,6 +44,7 @@ class MockBrowserWindow {
   loadURL = jest.fn();
   on = jest.fn();
   removeListener = jest.fn();
+  destroy = jest.fn();
 }
 
 describe('Window', () => {
@@ -71,6 +72,34 @@ describe('Window', () => {
     testRender(<Application />);
 
     expect(mockWindows.length).toBe(1);
+  });
+
+  test('unmounts', () => {
+    class Application extends React.Component {
+      state = {
+        render: true
+      };
+
+      componentDidMount() {
+        setTimeout(() => {
+          this.setState({
+            render: false
+          });
+        }, 2000);
+      }
+
+      render() {
+        return this.state.render && <Window />;
+      }
+    }
+
+    testRender(<Application />);
+
+    expect(mockWindows.length).toBe(1);
+    expect(mockWindows[0].destroy).not.toBeCalled();
+
+    jest.runTimersToTime(2000);
+    expect(mockWindows[0].destroy).toBeCalled();
   });
 
   test('can render more than once', () => {
@@ -147,8 +176,8 @@ describe('Window', () => {
       // Again, there is currently no way to test this, as it's not visible
       // from the outside that the windows are nested.
 
-      // TODO: we also need to test here that removed windows are properly
-      // destroyed / closed. As we currently do not do that, we cannot test it.
+      expect(mockWindows[0].destroy).not.toBeCalled();
+      expect(mockWindows[1].destroy).toBeCalled();
     });
   });
 
